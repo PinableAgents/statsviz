@@ -1,3 +1,5 @@
+github.com/PinableAgents/statsviz v0.0.1 h1:V8+gKvISkHHkhYPv9Wx1F9HU8qKVvc3COGHLPQEAXVs=
+github.com/PinableAgents/statsviz v0.0.1/go.mod h1:UtOfpY9XuVf+7q2h1FhzOMdMKPwtP9SkKC75u5Cc3/w=
 github.com/go-chi/chi/v5 v5.3.0 h1:halUjDxhshgXHMrao5bB8eNBXo/rnzwr8m5m36glehM=
 github.com/go-chi/chi/v5 v5.3.0/go.mod h1:R+tYY2hNuVUUjxoPtqUdgBqevM9s9njzkTLutVsOCto=
 github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aNNg=

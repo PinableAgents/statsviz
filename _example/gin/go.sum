@@ -1,3 +1,5 @@
+github.com/PinableAgents/statsviz v0.0.1 h1:V8+gKvISkHHkhYPv9Wx1F9HU8qKVvc3COGHLPQEAXVs=
+github.com/PinableAgents/statsviz v0.0.1/go.mod h1:UtOfpY9XuVf+7q2h1FhzOMdMKPwtP9SkKC75u5Cc3/w=
 github.com/bytedance/gopkg v0.1.3 h1:TPBSwH8RsouGCBcMBktLt1AymVo2TVsBVCY4b6TnZ/M=
 github.com/bytedance/gopkg v0.1.3/go.mod h1:576VvJ+eJgyCzdjS+c4+77QF3p7ubbtiKARP3TxducM=
 github.com/bytedance/sonic v1.15.0 h1:/PXeWFaR5ElNcVE84U0dOHjiMHQOwNIx3K4ymzh/uSE=

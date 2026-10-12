@@ -1,3 +1,5 @@
+github.com/PinableAgents/statsviz v0.0.1 h1:V8+gKvISkHHkhYPv9Wx1F9HU8qKVvc3COGHLPQEAXVs=
+github.com/PinableAgents/statsviz v0.0.1/go.mod h1:UtOfpY9XuVf+7q2h1FhzOMdMKPwtP9SkKC75u5Cc3/w=
 github.com/andybalholm/brotli v1.2.2 h1:HzTuoo2ErYQqf5qvcJInB8uvqSVxRttzkFexPWtnceM=
 github.com/andybalholm/brotli v1.2.2/go.mod h1:rzTDkvFWvIrjDXZHkuS16NPggd91W3kUSvPlQ1pLaKY=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
