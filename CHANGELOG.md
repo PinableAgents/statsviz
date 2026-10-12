@@ -1,3 +1,9 @@
+v0.0.1 / 2026-10-12
+==============
+  * Initial release of the PinableAgents fork, based on arl/statsviz @ v0.8.2.
+  * Rename module path to github.com/PinableAgents/statsviz so the fork can be
+    fetched and imported directly.
+
 v0.8.1 / 2026-07-04
 ==============
   * Bump dependencies:

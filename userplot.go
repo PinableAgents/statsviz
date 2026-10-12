@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/arl/statsviz/internal/plot"
+	"github.com/PinableAgents/statsviz/internal/plot"
 )
 
 // TimeSeriesType describes the type of a time series plot.

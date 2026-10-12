@@ -27,7 +27,7 @@ To bootstrap the UI for development:
  - run `npm install`
  - run `npm run dev` and leave it running
  - in another terminal, cd to an example, for example `_example/default`
- - run `go mod edit -replace=github.com/arl/statsviz=../../` to build the
+ - run `go mod edit -replace=github.com/PinableAgents/statsviz=../../` to build the
    example with your local version of the Go code. If you haven't touched to the
    Go code you can skip this step.
 

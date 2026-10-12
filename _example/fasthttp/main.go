@@ -10,8 +10,8 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpadaptor"
 
-	"github.com/arl/statsviz"
-	example "github.com/arl/statsviz/_example"
+	"github.com/PinableAgents/statsviz"
+	example "github.com/PinableAgents/statsviz/_example"
 )
 
 func main() {

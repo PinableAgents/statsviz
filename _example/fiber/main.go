@@ -9,8 +9,8 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/soheilhy/cmux"
 
-	"github.com/arl/statsviz"
-	example "github.com/arl/statsviz/_example"
+	"github.com/PinableAgents/statsviz"
+	example "github.com/PinableAgents/statsviz/_example"
 )
 
 func main() {

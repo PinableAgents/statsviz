@@ -6,7 +6,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/arl/statsviz/internal/plot"
+	"github.com/PinableAgents/statsviz/internal/plot"
 )
 
 type clients struct {

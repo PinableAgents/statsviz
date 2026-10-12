@@ -1,5 +1,5 @@
 <div align="center">
- <a href="https://github.com/arl/statsviz" title="Statsviz's Github repository.">
+ <a href="https://github.com/PinableAgents/statsviz" title="Statsviz's Github repository.">
     <img src="https://raw.githubusercontent.com/arl/statsviz/readme-docs/logo.png?sanitize=true" width="100" height="auto"/>
  </a>
 <br>
@@ -7,22 +7,22 @@
 <br>
 
 <p align="center">
-  <a href="https://pkg.go.dev/github.com/arl/statsviz" title="Statsviz on pkg.go.dev">
-    <img src="https://pkg.go.dev/badge/github.com/arl/statsviz" alt="Go Reference">
+  <a href="https://pkg.go.dev/github.com/PinableAgents/statsviz" title="Statsviz on pkg.go.dev">
+    <img src="https://pkg.go.dev/badge/github.com/PinableAgents/statsviz" alt="Go Reference">
   </a>
-  <a href="https://img.shields.io/github/tag/arl/statsviz.svg" title="Latest tag">
-    <img src="https://img.shields.io/github/tag/arl/statsviz.svg" alt="Latest tag">
+  <a href="https://img.shields.io/github/tag/PinableAgents/statsviz.svg" title="Latest tag">
+    <img src="https://img.shields.io/github/tag/PinableAgents/statsviz.svg" alt="Latest tag">
   </a>
   <a href="https://awesome.re/mentioned-badge.svg" title="Mentioned in Awesome Go">
     <img src="https://awesome.re/mentioned-badge.svg" alt="Mentioned in Awesome Go">
   </a>
 </p>
 <p align="center">
-  <a href="https://github.com/arl/statsviz/actions">
-    <img src="https://github.com/arl/statsviz/workflows/Tests-linux/badge.svg" alt="Linux CI">
+  <a href="https://github.com/PinableAgents/statsviz/actions">
+    <img src="https://github.com/PinableAgents/statsviz/workflows/Tests-linux/badge.svg" alt="Linux CI">
   </a>
-  <a href="https://github.com/arl/statsviz/actions">
-    <img src="https://github.com/arl/statsviz/workflows/Tests-others/badge.svg" alt="Others CI">
+  <a href="https://github.com/PinableAgents/statsviz/actions">
+    <img src="https://github.com/PinableAgents/statsviz/workflows/Tests-others/badge.svg" alt="Others CI">
   </a>
   <a href="https://codecov.io/gh/arl/statsviz">
     <img src="https://codecov.io/gh/arl/statsviz/branch/main/graph/badge.svg" alt="Codecov">
@@ -62,7 +62,7 @@ Visualize real time plots of your Go program [runtime/metrics](https://pkg.go.de
 Get the latest version:
 
 ```
-go get github.com/arl/statsviz@latest
+go get github.com/PinableAgents/statsviz@latest
 ```
 
 
@@ -129,7 +129,7 @@ Statsviz is made of two parts:
 
 ### Go API
 
-Check out the API reference on [pkg.go.dev](https://pkg.go.dev/github.com/arl/statsviz#section-documentation).
+Check out the API reference on [pkg.go.dev](https://pkg.go.dev/github.com/PinableAgents/statsviz#section-documentation).
 
 ### Web User Interface
 
@@ -269,11 +269,11 @@ Please see the [userplots example](_example/userplots/main.go).
 
 ## Questions / Troubleshooting
 
-Either use GitHub's [discussions](https://github.com/arl/statsviz/discussions) or come to say hi and ask a live question on [#statsviz channel on Gopher's slack](https://gophers.slack.com/archives/C043DU4NZ9D).
+Either use GitHub's [discussions](https://github.com/PinableAgents/statsviz/discussions) or come to say hi and ask a live question on [#statsviz channel on Gopher's slack](https://gophers.slack.com/archives/C043DU4NZ9D).
 
 ## Contributing
 
-Please use [issues](https://github.com/arl/statsviz/issues/new/choose) for bugs and feature requests.  
+Please use [issues](https://github.com/PinableAgents/statsviz/issues/new/choose) for bugs and feature requests.  
 Pull-requests are always welcome!  
 More details in [CONTRIBUTING.md](CONTRIBUTING.md).
 

@@ -5,10 +5,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/arl/statsviz"
+	"github.com/PinableAgents/statsviz"
 	"github.com/go-chi/chi/v5"
 
-	example "github.com/arl/statsviz/_example"
+	example "github.com/PinableAgents/statsviz/_example"
 )
 
 func main() {

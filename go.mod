@@ -1,4 +1,4 @@
-module github.com/arl/statsviz
+module github.com/PinableAgents/statsviz
 
 go 1.25
 

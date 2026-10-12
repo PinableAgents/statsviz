@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/arl/statsviz"
-	example "github.com/arl/statsviz/_example"
+	"github.com/PinableAgents/statsviz"
+	example "github.com/PinableAgents/statsviz/_example"
 )
 
 // basicAuth adds HTTP Basic Authentication to h.

@@ -12,7 +12,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/arl/statsviz/internal/static"
+	"github.com/PinableAgents/statsviz/internal/static"
 )
 
 func testIndex(t *testing.T, f http.Handler, url string) {
