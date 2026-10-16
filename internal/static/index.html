@@ -113,7 +113,7 @@
         </div>
 
         <!-- Time range -->
-        <div class="w-100 w-lg-auto d-flex justify-content-center">
+        <div class="w-100 w-lg-auto d-flex justify-content-center align-items-center gap-2">
           <div class="btn-group nav-radio" role="group" aria-label="Time range">
             <input
               type="radio"
@@ -161,43 +161,8 @@
               title="Last 10 minutes"
               >10m</label
             >
-            <input
-              type="radio"
-              class="btn-check"
-              name="range"
-              id="range60"
-              value="3600"
-              autocomplete="off"
-            />
-            <label class="btn btn-sm btn-outline-secondary" for="range60">1h</label>
-            <input
-              type="radio"
-              class="btn-check"
-              name="range"
-              id="range360"
-              value="21600"
-              autocomplete="off"
-            />
-            <label class="btn btn-sm btn-outline-secondary" for="range360">6h</label>
-            <input
-              type="radio"
-              class="btn-check"
-              name="range"
-              id="range1440"
-              value="86400"
-              autocomplete="off"
-            />
-            <label class="btn btn-sm btn-outline-secondary" for="range1440">24h</label>
-            <input
-              type="radio"
-              class="btn-check"
-              name="range"
-              id="range10080"
-              value="604800"
-              autocomplete="off"
-            />
-            <label class="btn btn-sm btn-outline-secondary" for="range10080">7d</label>
           </div>
+          <button id="history-toggle" class="btn btn-sm btn-outline-secondary text-nowrap" type="button" aria-controls="history-panel" aria-expanded="false" hidden>查看历史</button>
         </div>
 
         <div
@@ -327,14 +292,22 @@
       </div>
     </nav>
 
-    <section id="history-panel" class="history-panel" aria-label="历史时间控制">
+    <section id="history-panel" class="history-panel" aria-label="历史时间控制" hidden>
       <div class="history-row">
         <span id="history-mode" class="badge text-bg-success">跟随实时</span>
+        <div class="btn-group nav-radio" role="group" aria-label="历史时间范围">
+          <input type="radio" class="btn-check" name="range" id="range60" value="3600" autocomplete="off" disabled />
+          <label class="btn btn-sm btn-outline-secondary" for="range60">1h</label>
+          <input type="radio" class="btn-check" name="range" id="range360" value="21600" autocomplete="off" disabled />
+          <label class="btn btn-sm btn-outline-secondary" for="range360">6h</label>
+          <input type="radio" class="btn-check" name="range" id="range1440" value="86400" autocomplete="off" disabled />
+          <label class="btn btn-sm btn-outline-secondary" for="range1440">24h</label>
+          <input type="radio" class="btn-check" name="range" id="range10080" value="604800" autocomplete="off" disabled />
+          <label class="btn btn-sm btn-outline-secondary" for="range10080">7d</label>
+        </div>
         <span id="history-status" class="history-status" role="status">正在检测历史功能…</span>
-        <span id="history-granularity" class="history-granularity"></span>
         <button id="history-prev" class="btn btn-sm btn-outline-secondary" type="button" disabled>← 前移</button>
         <button id="history-next" class="btn btn-sm btn-outline-secondary" type="button" disabled>后移 →</button>
-        <button id="history-live" class="btn btn-sm btn-primary" type="button">返回实时</button>
       </div>
       <div class="history-row history-range-row">
         <label for="history-from">起始</label>
@@ -350,6 +323,7 @@
         <button id="history-point-query" class="btn btn-sm btn-outline-primary" type="button" disabled>查看真实采样</button>
         <span class="history-hint">也可点击任意图表同步游标</span>
       </div>
+      <div id="history-granularity" class="history-granularity"></div>
       <details id="point-details" class="point-details">
         <summary>采样详情</summary>
         <div id="point-detail-content">尚未选择采样点</div>

@@ -141,9 +141,11 @@ The database path is chosen by the application, and its parent directory is
 created when needed. See [_example/history](./_example/history/) for a complete
 server with configurable address and database path.
 
-With history enabled, the dashboard adds 1h, 6h, 24h and 7d presets, custom
-start/end times, a timeline slider, and actual sample details. Historical views
-stay fixed while collection continues; use “返回实时” to follow the latest data.
+With history enabled, use “查看历史” in the top bar to open the history controls:
+1h, 6h, 24h and 7d presets, custom start/end times, a timeline slider, and actual
+sample details. Historical views stay fixed while collection continues; use
+“返回实时” to collapse the controls and restore the previous live time range.
+Zooming or panning a plot, or inspecting a sample, also opens the history controls.
 Long ranges use persisted rollups and adapt their resolution to the response
 budget, while point queries read the original snapshots. See the
 [SQLite history design](./docs/sqlite-history-design.md) for storage limits,

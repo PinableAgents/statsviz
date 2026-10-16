@@ -46,6 +46,7 @@ let rangeQueryInFlight = null;
 let rangeQueryDebouncer = null;
 let renderedPoints = [];
 let frozenView = null;
+let liveDurationMs = 60 * 1000;
 
 const view = {
   mode: "follow",
@@ -59,12 +60,13 @@ const elements = {};
 
 const collectElements = () => {
   for (const id of [
+    "history-panel",
+    "history-toggle",
     "history-mode",
     "history-status",
     "history-granularity",
     "history-prev",
     "history-next",
-    "history-live",
     "history-from",
     "history-to",
     "history-apply",
@@ -101,6 +103,10 @@ const setMode = (mode) => {
   elements["history-mode"].className = `badge ${fixed ? "text-bg-warning" : "text-bg-success"}`;
   elements["history-prev"].disabled = !historyAvailable || !fixed;
   elements["history-next"].disabled = !historyAvailable || !fixed;
+  elements["history-panel"].hidden = !fixed;
+  elements["history-toggle"].textContent = fixed ? "返回实时" : "查看历史";
+  elements["history-toggle"].setAttribute("aria-expanded", String(fixed));
+  elements["history-toggle"].classList.toggle("active", fixed);
 };
 
 const updateRangeControls = () => {
@@ -116,6 +122,7 @@ const updateRangeControls = () => {
 };
 
 const setHistoryControlsEnabled = (enabled) => {
+  elements["history-toggle"].hidden = !enabled;
   for (const id of [
     "history-from",
     "history-to",
@@ -130,6 +137,36 @@ const setHistoryControlsEnabled = (enabled) => {
     if (Number(input.value) > 600) input.disabled = !enabled;
   }
   setMode(view.mode);
+};
+
+const openHistory = () => {
+  if (!historyAvailable || view.mode === "history") return;
+  currentBounds();
+  setMode("history");
+  render(true);
+  scheduleRangeQuery(true);
+};
+
+const returnToLive = () => {
+  historyClient?.cancelPoint();
+  rangeQueryDebouncer?.cancel();
+  view.durationMs = liveDurationMs;
+  setMode("follow");
+  frozenView = null;
+  elements["point-details"].open = false;
+  plotMgr?.setCursor(null);
+  if (view.paused) {
+    const playButton = document.getElementById("btn-play");
+    playButton.checked = true;
+    playButton.dispatchEvent(new Event("change"));
+  }
+  for (const input of document.querySelectorAll('input[name="range"]')) {
+    input.checked = Number(input.value) * 1000 === liveDurationMs;
+  }
+  currentBounds();
+  updateRangeControls();
+  render(true);
+  if (historyAvailable) queryRange({ interactive: true });
 };
 
 const schemaEntriesFor = (points) => {
@@ -279,6 +316,7 @@ const initializeHistory = async () => {
   if (!liveConfig?.history?.enabled) {
     rangeQueryDebouncer?.cancel();
     historyAvailable = false;
+    if (view.mode === "history") returnToLive();
     setHistoryControlsEnabled(false);
     setStatus("服务未启用持久历史，实时监控仍可使用");
     return;
@@ -302,6 +340,7 @@ const initializeHistory = async () => {
       return;
     }
     historyAvailable = false;
+    if (view.mode === "history") returnToLive();
     setHistoryControlsEnabled(false);
     setStatus("历史接口不可用，已保留实时监控", true);
   }
@@ -399,6 +438,7 @@ async function requestPoint(timestamp, schemaKey = null) {
     setStatus("真实单点查询需要启用持久历史", true);
     return;
   }
+  openHistory();
   const runId = runIdForPointRequest(
     renderedPoints,
     currentRangeResponse?.runs,
@@ -432,15 +472,9 @@ const bindHistoryControls = () => {
     const nextTo = Math.min(Number(historyMeta?.to || view.to + view.durationMs), view.to + view.durationMs);
     setFixedRange(nextTo - view.durationMs, nextTo);
   });
-  elements["history-live"].addEventListener("click", () => {
-    historyClient?.cancelPoint();
-    rangeQueryDebouncer?.cancel();
-    setMode("follow");
-    frozenView = null;
-    currentBounds();
-    updateRangeControls();
-    render(true);
-    if (historyAvailable) queryRange({ interactive: true });
+  elements["history-toggle"].addEventListener("click", () => {
+    if (view.mode === "history") returnToLive();
+    else openHistory();
   });
   elements["history-slider"].addEventListener("input", () => {
     const to = Number(elements["history-slider"].value);
@@ -479,6 +513,7 @@ const initializeUI = () => {
     onPreset: (seconds) => {
       historyClient?.cancelPoint();
       view.durationMs = seconds * 1000;
+      if (view.mode === "follow") liveDurationMs = view.durationMs;
       const pausedFollow = view.mode === "follow" && view.paused;
       if (pausedFollow) {
         const bounds = pausedWindowBounds(frozenView?.to ?? view.to, view.durationMs);

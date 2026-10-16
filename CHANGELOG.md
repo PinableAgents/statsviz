@@ -1,3 +1,10 @@
+v0.1.1 / 2026-10-16
+==============
+  * Keep the top bar compact during live monitoring; open historical presets,
+    custom ranges, the timeline and sample details with “查看历史”.
+  * Open history controls when inspecting or navigating a plot. “返回实时”
+    collapses the controls, resumes updates and restores the previous live range.
+
 v0.1.0 / 2026-10-16
 ==============
   * Add opt-in SQLite history with seven-day rolling retention, WAL-backed

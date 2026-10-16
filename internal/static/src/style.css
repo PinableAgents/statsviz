@@ -8,6 +8,9 @@ body {
 }
 
 .history-panel {
+  flex: 0 0 auto;
+  max-height: 45vh;
+  overflow: auto;
   padding: 0.4rem 0.75rem;
   border-top: 1px solid var(--bs-border-color);
   border-bottom: 1px solid var(--bs-border-color);
@@ -27,15 +30,18 @@ body {
 }
 
 .history-status {
-  min-width: 12rem;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .history-granularity {
-  flex: 1 1 auto;
+  margin-top: 0.35rem;
   color: var(--bs-secondary-color);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.history-row > .btn,
+.history-row > .btn-group {
+  flex-shrink: 0;
 }
 
 .history-range-row input[type="datetime-local"],
@@ -136,11 +142,7 @@ body {
     flex-wrap: wrap;
   }
 
-  .history-panel {
-    flex: 0 0 auto;
-  }
-
-  .history-granularity {
+  .history-status {
     flex-basis: 100%;
   }
 
