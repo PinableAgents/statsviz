@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -172,7 +171,7 @@ func openWithClock(path string, options Options, now func() time.Time) (*Store, 
 }
 
 func openDB(path string, readOnly bool) (*sql.DB, error) {
-	u := &url.URL{Scheme: "file", Path: path}
+	u := databaseURL(path)
 	query := u.Query()
 	query.Add("_pragma", "busy_timeout(2000)")
 	query.Add("_pragma", "foreign_keys(1)")

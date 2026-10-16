@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -430,7 +429,7 @@ func acceptanceFixtureIDForPayloadVersion(settings acceptanceSettings, configHas
 }
 
 func acceptanceReadMarker(path string) (acceptanceMarker, error) {
-	u := &url.URL{Scheme: "file", Path: path}
+	u := databaseURL(path)
 	query := u.Query()
 	query.Set("mode", "ro")
 	u.RawQuery = query.Encode()
@@ -451,7 +450,7 @@ FROM statsviz_acceptance_fixture WHERE singleton = 1`).Scan(
 }
 
 func acceptanceReadSampleCount(path string, runID int64) (int64, error) {
-	u := &url.URL{Scheme: "file", Path: path}
+	u := databaseURL(path)
 	query := u.Query()
 	query.Set("mode", "ro")
 	u.RawQuery = query.Encode()
