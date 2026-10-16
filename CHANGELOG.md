@@ -1,3 +1,18 @@
+v0.1.0 / 2026-10-16
+==============
+  * Add opt-in SQLite history with seven-day rolling retention, WAL-backed
+    asynchronous writes and persistent 10s/1m/10m aggregates.
+  * Add historical range and point APIs, 1h/6h/24h/7d presets, custom ranges,
+    a timeline slider and actual sample details.
+  * Preserve original integer snapshots and historical run configurations,
+    with explicit gaps, bounded queries and restart recovery.
+  * Reduce aggregate payload size, use bounded point and tail index lookups,
+    and avoid rewriting finalized aggregates during shutdown.
+  * Reduce allocation in sample validation and reject numbers that cannot be
+    processed by the aggregation layer before they enter the write queue.
+  * Add a history example, design documentation and a reproducible 604800-sample
+    capacity/performance acceptance tool with recorded results.
+
 v0.0.1 / 2026-10-12
 ==============
   * Initial release of the PinableAgents fork, based on arl/statsviz @ v0.8.2.
