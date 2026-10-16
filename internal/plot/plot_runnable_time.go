@@ -28,14 +28,15 @@ var _ = register(description{
 		buckets := downsampleBuckets(hist, histfactor)
 
 		return Heatmap{
-			Name:       "runnable-time",
-			Tags:       []tag{tagScheduler},
-			Title:      "Time Goroutines Spend in 'Runnable' state",
-			Type:       "heatmap",
-			UpdateFreq: 5,
-			Colorscale: GreenShades,
-			Buckets:    floatseq(len(buckets)),
-			CustomData: buckets,
+			Name:        "runnable-time",
+			Aggregation: aggregationHistogram,
+			Tags:        []tag{tagScheduler},
+			Title:       "Time Goroutines Spend in 'Runnable' state",
+			Type:        "heatmap",
+			UpdateFreq:  5,
+			Colorscale:  GreenShades,
+			Buckets:     floatseq(len(buckets)),
+			CustomData:  buckets,
 			Hover: HeapmapHover{
 				YName: "duration",
 				YUnit: "duration",

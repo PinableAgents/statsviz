@@ -15,6 +15,9 @@ type clients struct {
 
 	mu sync.RWMutex
 	m  map[*websocket.Conn]chan []byte
+	wg sync.WaitGroup
+
+	closed bool
 }
 
 func newClients(ctx context.Context, cfg *plot.Config) *clients {
@@ -32,24 +35,29 @@ type wsmsg struct {
 
 func (c *clients) add(conn *websocket.Conn) {
 	dbglog("adding client")
+	ch := make(chan []byte)
+
+	// 先登记再写配置，使 close 能拒绝或中断与 Server.Close 并发的连接。
+	c.mu.Lock()
+	if c.closed {
+		c.mu.Unlock()
+		_ = conn.Close()
+		return
+	}
+	c.m[conn] = ch
+	c.wg.Add(1)
+	c.mu.Unlock()
 
 	// Send config first.
 	err := conn.WriteJSON(wsmsg{Event: "config", Data: c.cfg})
 	if err != nil {
 		dbglog("failed to send config: %v", err)
+		c.remove(conn, ch)
 		return
 	}
 
-	ch := make(chan []byte)
-
 	go func() {
-		defer func() {
-			c.mu.Lock()
-			delete(c.m, conn)
-			c.mu.Unlock()
-
-			dbglog("removed client")
-		}()
+		defer c.remove(conn, ch)
 
 		for {
 			select {
@@ -63,11 +71,37 @@ func (c *clients) add(conn *websocket.Conn) {
 			}
 		}
 	}()
+}
 
+func (c *clients) remove(conn *websocket.Conn, ch chan []byte) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
+	if c.m[conn] == ch {
+		delete(c.m, conn)
+	}
+	c.mu.Unlock()
+	_ = conn.Close()
+	c.wg.Done()
+	dbglog("removed client")
+}
 
-	c.m[conn] = ch
+func (c *clients) close() {
+	c.mu.Lock()
+	if c.closed {
+		c.mu.Unlock()
+		c.wg.Wait()
+		return
+	}
+	c.closed = true
+	connections := make([]*websocket.Conn, 0, len(c.m))
+	for conn := range c.m {
+		connections = append(connections, conn)
+	}
+	c.mu.Unlock()
+
+	for _, conn := range connections {
+		_ = conn.Close()
+	}
+	c.wg.Wait()
 }
 
 func sendbuf(conn *websocket.Conn, buf []byte) error {

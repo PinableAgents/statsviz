@@ -45,7 +45,5 @@ export const formatFunction = (unit) => {
       return formatBytes;
   }
   // Default formatting
-  return (y) => {
-    `${y} ${hover.yunit}`;
-  };
+  return (y) => `${y} ${unit}`;
 };

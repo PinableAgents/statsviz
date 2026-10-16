@@ -5,18 +5,21 @@ export default class WebSocketClient {
   #timeout;
   #onConfig;
   #onData;
+  #onOpen;
 
   /**
    * @param {string} uri           WebSocket URI
    * @param {Function} onConfig    callback(configData)
    * @param {Function} onData      callback(messageData)
    * @param {number} [initialTimeout=250]
+   * @param {Function} [onOpen]   连接建立后的回调
    */
-  constructor(uri, onConfig, onData, initialTimeout = 250) {
+  constructor(uri, onConfig, onData, initialTimeout = 250, onOpen = null) {
     this.#uri = uri;
     this.#timeout = initialTimeout;
     this.#onConfig = onConfig;
     this.#onData = onData;
+    this.#onOpen = onOpen;
     this.#connect();
   }
 
@@ -26,6 +29,7 @@ export default class WebSocketClient {
 
     ws.onopen = () => {
       this.#timeout = 250; // reset backoff
+      this.#onOpen?.();
     };
 
     ws.onclose = (ev) => {

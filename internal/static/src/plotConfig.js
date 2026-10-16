@@ -11,14 +11,8 @@ export const newConfigObject = (cfg, isMaximized) => {
     displayModeBar: true,
     modeBarButtonsToRemove: [
       "2D",
-      "zoom2d",
-      "pan2d",
       "select2d",
       "lasso2d",
-      "zoomIn2d",
-      "zoomOut2d",
-      "autoScale2d",
-      "resetScale2d",
       "toggleSpikelines",
       "sendChartToCloud",
     ],
@@ -73,8 +67,9 @@ export const newLayoutObject = (cfg, isMaximized) => {
     xaxis: {
       tickformat: "%H:%M'%S″",
       type: "date",
-      fixedrange: true,
+      fixedrange: false,
       autorange: false,
+      rangeslider: { visible: false },
     },
     yaxis: {
       tickmode: cfg.layout.yaxis.tickmode,

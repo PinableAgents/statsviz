@@ -45,6 +45,7 @@ Visualize real time plots of your Go program [runtime/metrics](https://pkg.go.de
 - [Statsviz](#statsviz)
   - [Install](#install)
   - [Usage](#usage)
+  - [SQLite History](#sqlite-history)
   - [Examples](#examples)
   - [How Does That Work?](#how-does-that-work)
   - [Documentation](#documentation)
@@ -80,6 +81,90 @@ go func() {
 ```
 
 Open your browser at http://localhost:8080/debug/statsviz
+
+
+## SQLite History
+
+History is opt-in. Programs that do not import `history/sqlite` do not link the
+SQLite driver. To retain metrics across browser refreshes and normal process
+restarts, open a dedicated database file and pass the store to `History`:
+
+```go
+store, err := sqlitehistory.Open("/var/lib/myapp/statsviz.db", sqlitehistory.Options{
+    Retention: 7 * 24 * time.Hour,
+})
+if err != nil { /* handle error */ }
+
+srv, err := statsviz.NewServer(statsviz.History(store))
+if err != nil {
+    _ = store.Close()
+    /* handle error */
+}
+
+appMux := http.NewServeMux()
+// Register on the application's existing mux.
+srv.Register(appMux)
+
+// 关闭时先停止采集并刷新队列。Store 由调用方持有，必须等
+// Server.Close 返回后再关闭。
+if err := srv.Close(); err != nil { /* handle flush error */ }
+if err := store.Close(); err != nil { /* handle close error */ }
+```
+
+For a diagnostics listener on its own configurable port, use a dedicated mux
+and HTTP server. Keeping this listener on loopback also avoids exposing runtime
+metrics on the public application listener:
+
+```go
+statsMux := http.NewServeMux()
+srv.Register(statsMux)
+
+statsAddr := os.Getenv("STATSVIZ_ADDR")
+if statsAddr == "" {
+    statsAddr = "127.0.0.1:8095"
+}
+statsHTTP := &http.Server{
+    Addr:    statsAddr,
+    Handler: statsMux,
+}
+go func() {
+    if err := statsHTTP.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+        log.Printf("statsviz HTTP server: %v", err)
+    }
+}()
+```
+
+Import the adapter as
+`sqlitehistory "github.com/PinableAgents/statsviz/history/sqlite"`. The default
+retention window is seven days; the query layer clips results to retained data.
+The database path is chosen by the application, and its parent directory is
+created when needed. See [_example/history](./_example/history/) for a complete
+server with configurable address and database path.
+
+With history enabled, the dashboard adds 1h, 6h, 24h and 7d presets, custom
+start/end times, a timeline slider, and actual sample details. Historical views
+stay fixed while collection continues; use “返回实时” to follow the latest data.
+Long ranges use persisted rollups and adapt their resolution to the response
+budget, while point queries read the original snapshots. See the
+[SQLite history design](./docs/sqlite-history-design.md) for storage limits,
+aggregation semantics and validation results. The opt-in
+[capacity validation tool](./docs/history-capacity-validation.md) builds a full
+seven-day fixture and records storage and query measurements.
+
+The registered HTTP endpoints follow the configured `Root` (the default paths
+are shown below). All timestamps are UTC Unix milliseconds and range intervals
+are left-closed, right-open:
+
+- `GET /debug/statsviz/history/meta`
+- `GET /debug/statsviz/history/range?from=...&to=...&run_id=...&max_points=1500&plots=...`
+- `GET /debug/statsviz/history/point?at=...&run_id=...&tolerance_ms=...`
+
+One database file supports one collecting process at a time. Samples already
+committed survive normal restarts, while samples still in the in-memory queue
+can be lost after a crash or forced termination. SQLite normally reuses freed
+pages, so the database file may remain near its historical high-water size even
+after old samples expire. Retention is bounded by available disk space; it is
+not an unconditional storage guarantee.
 
 
 ## Examples

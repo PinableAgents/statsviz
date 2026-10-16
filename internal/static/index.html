@@ -120,7 +120,7 @@
               class="btn-check"
               name="range"
               id="range1"
-              value="1"
+              value="60"
               autocomplete="off"
               checked
             />
@@ -136,7 +136,7 @@
               class="btn-check"
               name="range"
               id="range5"
-              value="5"
+              value="300"
               autocomplete="off"
             />
             <label
@@ -151,7 +151,7 @@
               class="btn-check"
               name="range"
               id="range10"
-              value="10"
+              value="600"
               autocomplete="off"
             />
             <label
@@ -161,6 +161,42 @@
               title="Last 10 minutes"
               >10m</label
             >
+            <input
+              type="radio"
+              class="btn-check"
+              name="range"
+              id="range60"
+              value="3600"
+              autocomplete="off"
+            />
+            <label class="btn btn-sm btn-outline-secondary" for="range60">1h</label>
+            <input
+              type="radio"
+              class="btn-check"
+              name="range"
+              id="range360"
+              value="21600"
+              autocomplete="off"
+            />
+            <label class="btn btn-sm btn-outline-secondary" for="range360">6h</label>
+            <input
+              type="radio"
+              class="btn-check"
+              name="range"
+              id="range1440"
+              value="86400"
+              autocomplete="off"
+            />
+            <label class="btn btn-sm btn-outline-secondary" for="range1440">24h</label>
+            <input
+              type="radio"
+              class="btn-check"
+              name="range"
+              id="range10080"
+              value="604800"
+              autocomplete="off"
+            />
+            <label class="btn btn-sm btn-outline-secondary" for="range10080">7d</label>
           </div>
         </div>
 
@@ -290,6 +326,35 @@
         </div>
       </div>
     </nav>
+
+    <section id="history-panel" class="history-panel" aria-label="历史时间控制">
+      <div class="history-row">
+        <span id="history-mode" class="badge text-bg-success">跟随实时</span>
+        <span id="history-status" class="history-status" role="status">正在检测历史功能…</span>
+        <span id="history-granularity" class="history-granularity"></span>
+        <button id="history-prev" class="btn btn-sm btn-outline-secondary" type="button" disabled>← 前移</button>
+        <button id="history-next" class="btn btn-sm btn-outline-secondary" type="button" disabled>后移 →</button>
+        <button id="history-live" class="btn btn-sm btn-primary" type="button">返回实时</button>
+      </div>
+      <div class="history-row history-range-row">
+        <label for="history-from">起始</label>
+        <input id="history-from" class="form-control form-control-sm" type="datetime-local" step="1" disabled />
+        <label for="history-to">结束</label>
+        <input id="history-to" class="form-control form-control-sm" type="datetime-local" step="1" disabled />
+        <button id="history-apply" class="btn btn-sm btn-outline-primary" type="button" disabled>查询</button>
+        <input id="history-slider" class="form-range" type="range" min="0" max="0" value="0" aria-label="历史窗口位置" disabled />
+      </div>
+      <div class="history-row point-row">
+        <label for="history-point-at">指定时间</label>
+        <input id="history-point-at" class="form-control form-control-sm" type="datetime-local" step="0.001" disabled />
+        <button id="history-point-query" class="btn btn-sm btn-outline-primary" type="button" disabled>查看真实采样</button>
+        <span class="history-hint">也可点击任意图表同步游标</span>
+      </div>
+      <details id="point-details" class="point-details">
+        <summary>采样详情</summary>
+        <div id="point-detail-content">尚未选择采样点</div>
+      </details>
+    </section>
 
     <div class="d-flex flex-grow-1">
       <!-- Main Content -->

@@ -50,11 +50,11 @@ var _ = register(description{
 			},
 		},
 		Subplots: []Subplot{
-			{Unitfmt: "%{y:.4s}s", Type: "bar", Name: "user"},
-			{Unitfmt: "%{y:.4s}s", Type: "bar", Name: "scavenge"},
-			{Unitfmt: "%{y:.4s}s", Type: "bar", Name: "idle"},
-			{Unitfmt: "%{y:.4s}s", Type: "bar", Name: "gc total"},
-			{Unitfmt: "%{y:.4s}s", Type: "scatter", Name: "total"},
+			{Unitfmt: "%{y:.4s}s", Type: "bar", Name: "user", Aggregation: aggregationRate},
+			{Unitfmt: "%{y:.4s}s", Type: "bar", Name: "scavenge", Aggregation: aggregationRate},
+			{Unitfmt: "%{y:.4s}s", Type: "bar", Name: "idle", Aggregation: aggregationRate},
+			{Unitfmt: "%{y:.4s}s", Type: "bar", Name: "gc total", Aggregation: aggregationRate},
+			{Unitfmt: "%{y:.4s}s", Type: "scatter", Name: "total", Aggregation: aggregationRate},
 		},
 		InfoText: `Shows the fraction of CPU spent in your code vs. runtime vs. wasted. Helps track overall utilization and potential headroom.
 <i>user is</i> the rate of change, per second, of <b>/cpu/classes/user:cpu-seconds</b>, the CPU time spent running user Go code.

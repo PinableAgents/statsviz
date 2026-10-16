@@ -44,14 +44,15 @@ var _ = register(description{
 		buckets := downsampleBuckets(allocsBySize, 1)
 
 		return Heatmap{
-			Name:       "size-classes",
-			Tags:       []tag{tagGC},
-			Title:      "Size Classes",
-			Type:       "heatmap",
-			UpdateFreq: 5,
-			Colorscale: BlueShades,
-			Buckets:    floatseq(len(buckets)),
-			CustomData: buckets,
+			Name:        "size-classes",
+			Aggregation: aggregationGauge,
+			Tags:        []tag{tagGC},
+			Title:       "Size Classes",
+			Type:        "heatmap",
+			UpdateFreq:  5,
+			Colorscale:  BlueShades,
+			Buckets:     floatseq(len(buckets)),
+			CustomData:  buckets,
 			Hover: HeapmapHover{
 				YName: "size class",
 				YUnit: "bytes",

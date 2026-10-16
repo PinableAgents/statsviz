@@ -2,8 +2,9 @@ import { plotMgr, drawPlots } from "./app.js";
 import { updateVisibility } from "./nav.js";
 import { Popover } from "bootstrap";
 
-export const onClickPlotMaximize = (cfg) => (_gd, _ev) => {
-  const clicked = plotMgr.plots.find((p) => p.name() === cfg.name);
+export const onClickPlotMaximize = (_cfg) => (gd, _ev) => {
+  const clicked = plotMgr.plots.find((p) => p.ownsElement(gd));
+  if (!clicked) return;
 
   if (clicked.isMaximized()) {
     // Restore plots visibility based on current filters.

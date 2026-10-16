@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/PinableAgents/statsviz/history"
 	"github.com/PinableAgents/statsviz/internal/plot"
 )
 
@@ -87,6 +88,9 @@ type TimeSeries struct {
 	// GetValue specifies the function called to get the value of this time
 	// series.
 	GetValue func() float64
+
+	// Aggregation 声明历史时间桶如何聚合该子序列，默认使用 Gauge。
+	Aggregation history.Kind
 }
 
 // TimeSeriesPlotConfig describes the configuration of a time series plot.
@@ -145,12 +149,21 @@ func (p TimeSeriesPlotConfig) Build() (TimeSeriesPlot, error) {
 		default:
 			return zero, fmt.Errorf("invalid HoverOn value %s", ts.HoverOn)
 		}
+		switch ts.Aggregation {
+		case "":
+			ts.Aggregation = history.Gauge
+		case history.Gauge, history.Rate, history.Delta, history.Histogram, history.Event:
+			// 合法的聚合类型会原样写入图表配置和运行配置。
+		default:
+			return zero, fmt.Errorf("invalid Aggregation value %s", ts.Aggregation)
+		}
 
 		subplots = append(subplots, plot.Subplot{
-			Name:    ts.Name,
-			Unitfmt: ts.Unitfmt,
-			HoverOn: string(ts.HoverOn),
-			Type:    string(ts.Type),
+			Name:        ts.Name,
+			Unitfmt:     ts.Unitfmt,
+			HoverOn:     string(ts.HoverOn),
+			Type:        string(ts.Type),
+			Aggregation: ts.Aggregation,
 		})
 		funcs = append(funcs, ts.GetValue)
 	}

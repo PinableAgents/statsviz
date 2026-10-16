@@ -36,14 +36,16 @@ var _ = register(description{
 		},
 		Subplots: []Subplot{
 			{
-				Name:    "allocs/sec",
-				Unitfmt: "%{y:.4s}",
-				Color:   RGBString(66, 133, 244),
+				Name:        "allocs/sec",
+				Unitfmt:     "%{y:.4s}",
+				Color:       RGBString(66, 133, 244),
+				Aggregation: aggregationRate,
 			},
 			{
-				Name:    "frees/sec",
-				Unitfmt: "%{y:.4s}",
-				Color:   RGBString(219, 68, 55),
+				Name:        "frees/sec",
+				Unitfmt:     "%{y:.4s}",
+				Color:       RGBString(219, 68, 55),
+				Aggregation: aggregationRate,
 			},
 		},
 		InfoText: `

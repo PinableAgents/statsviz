@@ -38,14 +38,16 @@ var _ = register(description{
 		},
 		Subplots: []Subplot{
 			{
-				Name:    "assist",
-				Unitfmt: "%{y:.4s}s",
-				Type:    "bar",
+				Name:        "assist",
+				Unitfmt:     "%{y:.4s}s",
+				Type:        "bar",
+				Aggregation: aggregationRate,
 			},
 			{
-				Name:    "background",
-				Unitfmt: "%{y:.4s}s",
-				Type:    "bar",
+				Name:        "background",
+				Unitfmt:     "%{y:.4s}s",
+				Type:        "bar",
+				Aggregation: aggregationRate,
 			},
 		},
 		InfoText: `Breakdown of how the GC scavenger returns memory to the OS (eagerly vs background).

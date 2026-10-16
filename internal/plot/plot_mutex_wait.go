@@ -32,9 +32,10 @@ var _ = register(description{
 		},
 		Subplots: []Subplot{
 			{
-				Name:    "mutex wait",
-				Unitfmt: "%{y:.4s}s",
-				Type:    "bar",
+				Name:        "mutex wait",
+				Unitfmt:     "%{y:.4s}s",
+				Type:        "bar",
+				Aggregation: aggregationRate,
 			},
 		},
 

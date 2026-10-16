@@ -1,125 +1,93 @@
 import * as theme from "./theme.js";
-import { plotMgr } from "./app.js";
 
 export let running = true;
 export let gcEnabled = true;
 export let timerange = 60;
 
-export function updateVisibility() {
-  const tagInputs = Array.from(
-    document.querySelectorAll("#navCategories input[data-tag]")
-  );
+let initialized = false;
+let currentCallbacks = null;
+
+export function updateVisibility(plotManager = currentCallbacks?.getPlotManager?.()) {
+  if (!plotManager) return;
+  const tagInputs = [...document.querySelectorAll("#navCategories input[data-tag]")];
   const searchInput = document.getElementById("plot-search");
-
   const activeTags = tagInputs
-    .filter((i) => i.checked)
-    .map((i) => i.dataset.tag);
+    .filter((input) => input.checked)
+    .map((input) => input.dataset.tag);
+  const query = searchInput?.value.trim() || "";
 
-  const query = searchInput ? searchInput.value.trim() : "";
-
-  plotMgr.plots.forEach((p) => {
-    const matchesTag = activeTags.some((tag) => p.hasTag(tag));
-    const matchesQuery = p.matches(query);
-    p.setVisible(matchesTag && matchesQuery);
-  });
+  for (const plot of plotManager.plots) {
+    plot.setVisible(
+      activeTags.some((tag) => plot.hasTag(tag)) && plot.matches(query),
+    );
+  }
 }
 
-export function initNav(onUpdate) {
-  // Show GC toggle.
-  const gcbtn = document.getElementById("btn-gc-events");
+export function initNav(callbacks) {
+  currentCallbacks = callbacks;
+  if (initialized) {
+    updateVisibility();
+    return;
+  }
+  initialized = true;
 
-  gcbtn.checked = gcEnabled;
-  gcbtn.addEventListener("change", (e) => {
-    gcEnabled = !gcEnabled;
-    gcbtn.checked = gcEnabled;
-    onUpdate(true);
+  const gcButton = document.getElementById("btn-gc-events");
+  gcButton.checked = gcEnabled;
+  gcButton.addEventListener("change", () => {
+    gcEnabled = gcButton.checked;
+    callbacks.onRedraw(true);
   });
 
-  // Pause/Resume button.
-  const playbtn = document.getElementById("btn-play");
-  playbtn.addEventListener("click", (e) => {
-    running = !running;
-    playbtn.checked = running;
-    onUpdate(true);
+  const playButton = document.getElementById("btn-play");
+  playButton.checked = running;
+  playButton.addEventListener("change", () => {
+    running = playButton.checked;
+    callbacks.onPause(!running);
   });
 
-  // Dark mode toggle.
-  const themebtn = document.getElementById("btn-darkmode");
-  themebtn.addEventListener("change", (e) => {
-    const themeMode = theme.getThemeMode();
-    const newTheme = (themeMode === "dark" && "light") || "dark";
+  const themeButton = document.getElementById("btn-darkmode");
+  themeButton.addEventListener("change", () => {
+    const newTheme = theme.getThemeMode() === "dark" ? "light" : "dark";
     localStorage.setItem("theme-mode", newTheme);
-
     theme.updateThemeMode();
-    plotMgr.plots.forEach((p) => p.updateTheme());
-    onUpdate(true);
+    for (const plot of callbacks.getPlotManager()?.plots || []) plot.updateTheme();
+    callbacks.onRedraw(true);
   });
 
-  // Plot tags toggling.
-  const tagInputs = Array.from(
-    document.querySelectorAll("#navCategories input[data-tag]")
-  );
-  const searchInput = document.getElementById("plot-search");
-
-  // Ensure initial state: all tags selected
+  const tagInputs = [...document.querySelectorAll("#navCategories input[data-tag]")];
   tagInputs.forEach((input) => (input.checked = true));
-
-  // Listen for tag changes
-  tagInputs.forEach((input) => {
-    input.addEventListener("click", (e) => {
-      if (e.altKey) {
-        e.preventDefault();
-
-        // Use setTimeout to ensure changes are applied after browser's default handling
-        setTimeout(() => {
-          const isSolo = tagInputs.every((i) => i.checked === (i === input));
-          if (isSolo) {
-            // If already solo, show all
-            tagInputs.forEach((i) => (i.checked = true));
-          } else {
-            // Otherwise, solo this tag
-            tagInputs.forEach((i) => (i.checked = i === input));
-          }
-
-          updateVisibility();
-          onUpdate(true);
-        }, 0);
-      }
+  for (const input of tagInputs) {
+    input.addEventListener("click", (event) => {
+      if (!event.altKey) return;
+      event.preventDefault();
+      setTimeout(() => {
+        const isSolo = tagInputs.every((item) => item.checked === (item === input));
+        tagInputs.forEach((item) => (item.checked = isSolo || item === input));
+        updateVisibility();
+        callbacks.onVisibility();
+      });
     });
-
     input.addEventListener("change", () => {
       updateVisibility();
-      onUpdate(true);
+      callbacks.onVisibility();
     });
-  });
+  }
 
-  // Listen for search input changes
-  searchInput.addEventListener("input", () => {
-    // If a plot is maximized, minimize it before applying search input filtering.
-    plotMgr.plots.forEach((p) => {
-      if (p.isMaximized()) {
-        p.minimize();
-      }
-    });
+  document.getElementById("plot-search").addEventListener("input", () => {
+    for (const plot of callbacks.getPlotManager()?.plots || []) {
+      if (plot.isMaximized()) plot.minimize();
+    }
     updateVisibility();
-    onUpdate(true);
+    callbacks.onVisibility();
   });
 
-  // Apply initial tag filter
+  const rangeInputs = [...document.querySelectorAll('input[name="range"]')];
+  for (const input of rangeInputs) {
+    input.addEventListener("change", () => {
+      if (!input.checked || input.value === "custom") return;
+      timerange = Number(input.value);
+      callbacks.onPreset(timerange);
+    });
+  }
   updateVisibility();
-
-  // Time range selection
-  const rangeInputs = document.querySelectorAll('input[name="range"]');
-
-  rangeInputs.forEach((r, i) =>
-    r.addEventListener("change", () => {
-      if (r.checked) {
-        rangeInputs[i].checked = true;
-        const val = 60 * parseInt(rangeInputs[i].value, 10);
-        timerange = val;
-        onUpdate(true);
-      }
-    })
-  );
-  document.getElementById("range1").checked = true;
 }

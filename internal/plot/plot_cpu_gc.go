@@ -45,10 +45,10 @@ var _ = register(description{
 			},
 		},
 		Subplots: []Subplot{
-			{Name: "mark assist", Unitfmt: "%{y:.4s}s"},
-			{Name: "mark dedicated", Unitfmt: "%{y:.4s}s"},
-			{Name: "mark idle", Unitfmt: "%{y:.4s}s"},
-			{Name: "pause", Unitfmt: "%{y:.4s}s"},
+			{Name: "mark assist", Unitfmt: "%{y:.4s}s", Aggregation: aggregationRate},
+			{Name: "mark dedicated", Unitfmt: "%{y:.4s}s", Aggregation: aggregationRate},
+			{Name: "mark idle", Unitfmt: "%{y:.4s}s", Aggregation: aggregationRate},
+			{Name: "pause", Unitfmt: "%{y:.4s}s", Aggregation: aggregationRate},
 		},
 
 		InfoText: `Cumulative metrics are converted to rates by Statsviz so as to be more easily comparable and readable.

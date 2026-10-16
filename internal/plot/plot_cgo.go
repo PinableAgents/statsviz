@@ -31,9 +31,10 @@ var _ = register(description{
 		},
 		Subplots: []Subplot{
 			{
-				Name:    "calls from go to c",
-				Unitfmt: "%{y}",
-				Color:   "red",
+				Name:        "calls from go to c",
+				Unitfmt:     "%{y}",
+				Color:       "red",
+				Aggregation: aggregationDelta,
 			},
 		},
 		InfoText: "Shows the count of calls made from Go to C by the current process, per unit of time. Uses <b>/cgo/go-to-c-calls:calls</b>",

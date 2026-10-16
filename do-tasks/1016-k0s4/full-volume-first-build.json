@@ -1,0 +1,89 @@
+{
+  "tool_id": "statsviz.sqlite.history.acceptance",
+  "format_version": 2,
+  "fixture_id": "f828b68bc0f10e4fa67178ccc572a43bdc6e4b5c1884f69a98a82ab0e01e1c1a",
+  "passed": false,
+  "phase": "close_reopen",
+  "generated_at_utc": "2026-10-15T23:58:28.297432Z",
+  "go_version": "go1.26.3",
+  "goos": "darwin",
+  "goarch": "arm64",
+  "db_path": "/private/tmp/statsviz-history-acceptance-full-1016/statsviz-history-acceptance-v2.db",
+  "report_path": "/private/tmp/statsviz-history-acceptance-full-1016/statsviz-history-acceptance-v2.json",
+  "sample_count": 604800,
+  "interval_ms": 1000,
+  "span_ms": 604800000,
+  "fixed_now_ms": 2000000400000,
+  "config_hash": "5b396467d7cd8b4b95bab715c651d4302c72ee4c349e5cc40b971ff81822efff",
+  "snapshot_shape_hash": "338ad57a8b8fa02ee9a43c1c35d29e10a29fb592b0994aaa4ac25079c8742d90",
+  "config_bytes": 35266,
+  "snapshot_bytes": 1628,
+  "plot_count": 26,
+  "numeric_cells": 523,
+  "kind_cells": {
+    "delta": 5,
+    "event": 1,
+    "gauge": 98,
+    "histogram": 405,
+    "rate": 14
+  },
+  "build": {
+    "reused": false,
+    "duration_ns": 511264845334,
+    "samples_per_second": 1182.9485354208057,
+    "sample_count": 604800,
+    "sample_payload_bytes": 2924746051,
+    "average_payload_bytes": 4835.8896345899475,
+    "rollup_rows": {
+      "10000": 60480,
+      "60000": 10080,
+      "600000": 1008
+    },
+    "rollup_payload_bytes": {
+      "10000": 1016348247,
+      "60000": 170205568,
+      "600000": 18186816
+    },
+    "db_bytes": 5209870336,
+    "wal_bytes": 4857512,
+    "projected_full_payload_bytes": 2924746051,
+    "projected_full_db_and_wal_bytes": 5214727848,
+    "memory": {
+      "after_build": {
+        "alloc_bytes": 5199400,
+        "total_alloc_bytes": 926883529640,
+        "sys_bytes": 23681304,
+        "heap_alloc_bytes": 5199400,
+        "heap_inuse_bytes": 6782976,
+        "num_gc": 299020,
+        "rss_bytes": 30130176
+      },
+      "before_build": {
+        "alloc_bytes": 3127552,
+        "total_alloc_bytes": 4549840,
+        "sys_bytes": 17750296,
+        "heap_alloc_bytes": 3127552,
+        "heap_inuse_bytes": 4292608,
+        "num_gc": 1,
+        "rss_bytes": 15106048
+      }
+    },
+    "max_sampled_rss_bytes": 31342592,
+    "progress_every": 10000,
+    "writer_dropped": 0,
+    "writer_last_error": "",
+    "writer_final_queue_depth": 0
+  },
+  "queries": {},
+  "concurrency": {
+    "rewrite_samples": 180,
+    "read_queries": 5,
+    "duration_ns": 787325500
+  },
+  "notes": [
+    "查询首次读取与预热单独记录，p50/p95/max 不包含这两次。",
+    "查询延迟与分配量包含 Store 调用和返回值 JSON 编码。",
+    "没有清理操作系统文件缓存，os_cache_explicitly_cleared 始终为 false。",
+    "保留边界与分批 cleanup 由常规 TestRetentionBoundaryAndPhysicalCleanup 覆盖，本工具不重复造大数据。"
+  ]
+}

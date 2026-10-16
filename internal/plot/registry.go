@@ -58,10 +58,15 @@ func (r *registry) mustidx(metric string) int {
 }
 
 func (r *registry) buildSamples() {
-	r.samples = make([]metrics.Sample, len(r.metrics))
-	for i := range r.samples {
-		r.samples[i].Name = r.metrics[i]
+	r.samples = r.newSamples()
+}
+
+func (r *registry) newSamples() []metrics.Sample {
+	samples := make([]metrics.Sample, len(r.metrics))
+	for i := range samples {
+		samples[i].Name = r.metrics[i]
 	}
+	return samples
 }
 
 func (r *registry) read() []metrics.Sample {

@@ -1,126 +1,135 @@
 import { Plot, createVerticalLines } from "./plot.js";
-import Plotly from "plotly.js-cartesian-dist";
 
-function debounce(fn, delay) {
+const debounce = (fn, delay) => {
   let timer = null;
-  return function () {
-    const context = this;
-    const args = arguments;
+  const wrapped = (...args) => {
     clearTimeout(timer);
-    timer = setTimeout(() => fn.apply(context, args), delay);
+    timer = setTimeout(() => fn(...args), delay);
   };
-}
+  wrapped.cancel = () => clearTimeout(timer);
+  return wrapped;
+};
+
+const MAX_EVENT_LINES = 120;
+
+const limitedEvents = (events) => {
+  if (events.length <= MAX_EVENT_LINES) return events;
+  const step = Math.ceil(events.length / MAX_EVENT_LINES);
+  return events.filter((_, index) => index % step === 0).slice(-MAX_EVENT_LINES);
+};
 
 export default class PlotManager {
-  #shapesCache;
-  #lastGcEnabled;
+  #shapesCache = new Map();
+  #lastGcEnabled = null;
   #staggerHandle = null;
+  #resizeHandler;
+  #rangeHandler;
+  #cursorAt = null;
+  #disposed = false;
 
-  constructor(config) {
+  constructor(schemaEntries, handlers = {}) {
     this.container = document.getElementById("plots");
-    this.plots = config.series.map((pd) => new Plot(pd));
-    this.#shapesCache = new Map();
-    this.#lastGcEnabled = null;
+    const multipleSchemas = schemaEntries.length > 1;
+    this.#rangeHandler = debounce((range) => handlers.onRange?.(range), 220);
+    this.plots = schemaEntries.flatMap((entry, entryIndex) =>
+      (entry.config.series || []).map((plot, plotIndex) => {
+        const suffix = multipleSchemas
+          ? ` · ${entry.startedAt ? new Date(entry.startedAt).toLocaleString() : entry.key.slice(0, 8)}`
+          : "";
+        return new Plot(
+          structuredClone(plot),
+          entry.key,
+          `plot-${entryIndex}-${plotIndex}`,
+          suffix,
+          {
+            onPoint: handlers.onPoint,
+            onRange: (range) => this.#rangeHandler(range),
+          },
+        );
+      }),
+    );
     this.#attach();
 
-    window.addEventListener(
-      "resize",
-      debounce(() => {
-        this.#resizeAll();
-      }, 100)
-    );
-
+    this.#resizeHandler = debounce(() => this.#resizeAll(), 100);
+    window.addEventListener("resize", this.#resizeHandler);
     requestAnimationFrame(() => this.#resizeAll());
   }
 
   #attach() {
     this.container.replaceChildren();
-    this.plots.forEach((p) => {
+    for (const plot of this.plots) {
       const div = document.createElement("div");
-      div.id = p.name();
+      div.id = plot.name();
       div.className = "plot-card";
-      // It's important to append the <div> to its container before creating the
-      // plot so Plotly knows the <div> dimensions.
       this.container.appendChild(div);
-      p.createElement(div);
-    });
+      plot.createElement(div);
+    }
   }
 
-  update(data, gcEnabled, timeRange, force = false) {
-    // Create GC vertical lines - only if needed.
+  update(data, gcEnabled, range, force = false) {
+    if (this.#disposed) return;
     const shapes = new Map();
     if (gcEnabled) {
-      // Only recreate shapes if GC state changed or events changed
       const gcStateChanged = this.#lastGcEnabled !== gcEnabled;
-
-      for (const [name, serie] of data.events) {
-        // Check if we need to regenerate shapes for this event
+      for (const [name, fullSeries] of data.events) {
+        const eventSeries = limitedEvents(fullSeries);
         const cached = this.#shapesCache.get(name);
         const eventsChanged =
           !cached ||
-          cached.length !== serie.length ||
-          (serie.length > 0 &&
-            cached[cached.length - 1]?.x0?.getTime() !==
-              serie[serie.length - 1]?.getTime());
-
-        if (gcStateChanged || eventsChanged || !this.#shapesCache.has(name)) {
-          const newShapes = createVerticalLines(serie);
-          this.#shapesCache.set(name, newShapes);
-          shapes.set(name, newShapes);
-        } else {
-          shapes.set(name, this.#shapesCache.get(name));
+          cached.eventCount !== fullSeries.length ||
+          cached.lastEvent !== fullSeries.at(-1)?.getTime();
+        if (gcStateChanged || eventsChanged) {
+          const lines = createVerticalLines(eventSeries);
+          this.#shapesCache.set(name, {
+            lines,
+            eventCount: fullSeries.length,
+            lastEvent: fullSeries.at(-1)?.getTime(),
+          });
         }
+        shapes.set(name, this.#shapesCache.get(name)?.lines || []);
       }
-    } else {
-      // GC disabled, clear all shapes
-      if (this.#lastGcEnabled !== false) {
-        this.#shapesCache.clear();
-      }
+    } else if (this.#lastGcEnabled !== false) {
+      this.#shapesCache.clear();
     }
-
     this.#lastGcEnabled = gcEnabled;
 
-    // X-axis range.
-    const now = data.times[data.times.length - 1];
-    const xrange = [now - timeRange * 1000, now];
-
-    // Cancel any pending update to avoid overlapping updates
-    if (this.#staggerHandle !== null) {
-      cancelAnimationFrame(this.#staggerHandle);
-      this.#staggerHandle = null;
-    }
-
-    const visiblePlots = this.plots.filter((p) => p.isVisible());
+    if (this.#staggerHandle !== null) cancelAnimationFrame(this.#staggerHandle);
+    const visiblePlots = this.plots.filter((plot) => plot.isVisible());
     let index = 0;
-
     const processBatch = () => {
       const start = performance.now();
-      // Process plots for up to 12ms per frame to leave time for UI
       while (index < visiblePlots.length && performance.now() - start < 12) {
-        visiblePlots[index].update(xrange, data, shapes, force);
+        visiblePlots[index].update(range, data, shapes, force, this.#cursorAt);
         index++;
       }
-
       if (index < visiblePlots.length) {
         this.#staggerHandle = requestAnimationFrame(processBatch);
       } else {
         this.#staggerHandle = null;
       }
     };
-
     processBatch();
   }
 
-  #resizeAll() {
-    this.plots.forEach((p) => {
-      const gd = document.getElementById(p.name());
-      // We're being super defensive here to ensure that the div is
-      // actually there (or Plotly.resize would fail).
-      if (!gd || !p.isVisible()) return;
-      const { offsetWidth: w, offsetHeight: h } = gd;
-      if (w === 0 || h === 0) return;
+  setCursor(timestamp) {
+    this.#cursorAt = timestamp;
+  }
 
-      p.resize();
-    });
+  #resizeAll() {
+    for (const plot of this.plots) {
+      if (!plot.isVisible()) continue;
+      plot.resize();
+    }
+  }
+
+  dispose() {
+    this.#disposed = true;
+    if (this.#staggerHandle !== null) cancelAnimationFrame(this.#staggerHandle);
+    this.#rangeHandler.cancel();
+    this.#resizeHandler?.cancel();
+    window.removeEventListener("resize", this.#resizeHandler);
+    for (const plot of this.plots) plot.dispose();
+    this.plots = [];
+    this.container.replaceChildren();
   }
 }

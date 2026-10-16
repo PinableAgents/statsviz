@@ -28,14 +28,15 @@ var _ = register(description{
 		buckets := downsampleBuckets(hist, histfactor)
 
 		return Heatmap{
-			Name:       "total-pauses-other",
-			Tags:       []tag{tagScheduler},
-			Title:      "Stop-the-world Pause Latencies (Other)",
-			Type:       "heatmap",
-			UpdateFreq: 5,
-			Colorscale: PinkShades,
-			Buckets:    floatseq(len(buckets)),
-			CustomData: buckets,
+			Name:        "total-pauses-other",
+			Aggregation: aggregationHistogram,
+			Tags:        []tag{tagScheduler},
+			Title:       "Stop-the-world Pause Latencies (Other)",
+			Type:        "heatmap",
+			UpdateFreq:  5,
+			Colorscale:  PinkShades,
+			Buckets:     floatseq(len(buckets)),
+			CustomData:  buckets,
 			Hover: HeapmapHover{
 				YName: "pause duration",
 				YUnit: "duration",

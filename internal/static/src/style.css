@@ -7,6 +7,74 @@ body {
   min-height: 0;
 }
 
+.history-panel {
+  padding: 0.4rem 0.75rem;
+  border-top: 1px solid var(--bs-border-color);
+  border-bottom: 1px solid var(--bs-border-color);
+  background: var(--bs-tertiary-bg);
+  font-size: 0.82rem;
+}
+
+.history-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.history-row + .history-row {
+  margin-top: 0.35rem;
+}
+
+.history-status {
+  min-width: 12rem;
+}
+
+.history-granularity {
+  flex: 1 1 auto;
+  color: var(--bs-secondary-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-range-row input[type="datetime-local"],
+.point-row input[type="datetime-local"] {
+  width: 13.5rem;
+}
+
+.history-range-row .form-range {
+  flex: 1 1 18rem;
+  min-width: 8rem;
+  margin-left: 0.5rem;
+}
+
+.history-hint {
+  color: var(--bs-secondary-color);
+}
+
+.point-details {
+  margin-top: 0.35rem;
+  max-height: 16rem;
+  overflow: auto;
+}
+
+.point-details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.point-table {
+  width: auto;
+  min-width: 32rem;
+  margin: 0.35rem 0 0;
+}
+
+.point-table td:first-child {
+  color: var(--bs-secondary-color);
+  padding-right: 1.5rem;
+}
+
 /* Top‐nav flex distribution */
 #top-navbar {
   display: flex;
@@ -57,6 +125,27 @@ body {
 @media (max-width: 991px) {
   .center-controls {
     align-items: center; /* center each full-width row */
+  }
+
+  body {
+    overflow: auto;
+  }
+
+  #top-navbar,
+  .history-row {
+    flex-wrap: wrap;
+  }
+
+  .history-panel {
+    flex: 0 0 auto;
+  }
+
+  .history-granularity {
+    flex-basis: 100%;
+  }
+
+  .history-range-row .form-range {
+    flex-basis: 100%;
   }
 }
 /* Wrapper for sidebar and content allows shrink */

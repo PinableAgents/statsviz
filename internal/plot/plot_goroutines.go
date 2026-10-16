@@ -42,7 +42,7 @@ var _ = register(description{
 			},
 		},
 		Subplots: []Subplot{
-			{Name: "created", Unitfmt: "%{y}", Type: "bar"},
+			{Name: "created", Unitfmt: "%{y}", Type: "bar", Aggregation: aggregationDelta},
 			{Name: "goroutines", Unitfmt: "%{y}"},
 			{Name: "not in Go", Unitfmt: "%{y}"},
 			{Name: "runnable", Unitfmt: "%{y}"},
