@@ -2,24 +2,43 @@ name: Release
 
 on:
   push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/release.yml'
     tags:
       - 'v[0-9]*'
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: >-
-          gh release create "$RELEASE_TAG"
-          --verify-tag
-          --title "Statsviz $RELEASE_TAG"
-          --notes-from-tag
-          --latest
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: |
+          if [[ -z "$RELEASE_TAG" ]]; then
+            read -r RELEASE_TAG _ < CHANGELOG.md
+          fi
+          git rev-parse --verify "refs/tags/$RELEASE_TAG"
+          if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists."
+            exit 0
+          fi
+          gh release create "$RELEASE_TAG" \
+            --verify-tag \
+            --title "Statsviz $RELEASE_TAG" \
+            --notes-from-tag \
+            --latest
