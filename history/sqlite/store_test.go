@@ -464,6 +464,16 @@ VALUES(?, ?, 'manual', ?, '{}')`, time.Now().UnixMilli()+int64(index), int64(tim
 	})
 }
 
+type gapRowTrackingQuerier struct {
+	readQuerier
+	rowQueries int
+}
+
+func (q *gapRowTrackingQuerier) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
+	q.rowQueries++
+	return q.readQuerier.QueryContext(ctx, query, args...)
+}
+
 func TestRangeRejectsGapRowBudget(t *testing.T) {
 	store, _ := openTestStore(t, Options{FlushInterval: time.Hour})
 	defer store.Close()
@@ -489,6 +499,32 @@ VALUES(?, ?, ?, ?, ?, 'test')`)
 	}
 	if err = tx.Commit(); err != nil {
 		t.Fatal(err)
+	}
+	for _, runID := range []int64{0, run.ID} {
+		t.Run(fmt.Sprintf("preflight/run-%d", runID), func(t *testing.T) {
+			queryer := &gapRowTrackingQuerier{readQuerier: store.readDB}
+			if _, err := readGaps(context.Background(), queryer, base, base+10, runID); !errors.Is(err, history.ErrTooLarge) {
+				t.Fatalf("gap row budget error = %v", err)
+			}
+			if queryer.rowQueries != 0 {
+				t.Fatalf("oversized gaps were materialized with %d row queries", queryer.rowQueries)
+			}
+		})
+	}
+	for _, query := range []struct {
+		name     string
+		from, to int64
+		runID    int64
+	}{
+		{"other-run", base, base + 10, run.ID + 1},
+		{"outside-range", base + 10, base + 20, 0},
+	} {
+		t.Run(query.name, func(t *testing.T) {
+			gaps, err := readGaps(context.Background(), store.readDB, query.from, query.to, query.runID)
+			if err != nil || len(gaps) != 0 {
+				t.Fatalf("unrelated gaps affected the budget: len=%d err=%v", len(gaps), err)
+			}
+		})
 	}
 	if _, err = store.Range(context.Background(), history.RangeRequest{From: base, To: base + 10, RunID: run.ID}); !errors.Is(err, history.ErrTooLarge) {
 		t.Fatalf("gap row budget error = %v", err)

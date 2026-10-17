@@ -812,11 +812,23 @@ func readWatermarks(ctx context.Context, queryer readQuerier, cutoff int64, runs
 	return result, nil
 }
 
+const gapRangeFilterSQL = `
+FROM gaps
+WHERE started_at_ms < ? AND ended_at_ms > ? AND (? = 0 OR run_id = ?)`
+
 func readGaps(ctx context.Context, queryer readQuerier, from, to, runID int64) ([]history.Gap, error) {
+	// 数量预检最多计数上限加一条，避免超限请求先逐行解码而耗尽查询时限。
+	var count int
+	if err := queryer.QueryRowContext(ctx, `
+SELECT count(*) FROM (SELECT 1 `+gapRangeFilterSQL+` LIMIT ?)`, to, from, runID, runID, maxMetadataGaps+1).Scan(&count); err != nil {
+		return nil, fmt.Errorf("检查历史缺口数量: %w", err)
+	}
+	if count > maxMetadataGaps {
+		return nil, history.ErrTooLarge
+	}
 	rows, err := queryer.QueryContext(ctx, `
 SELECT run_id, first_seq, last_seq, max(started_at_ms, ?), min(ended_at_ms, ?), reason
-FROM gaps
-WHERE started_at_ms < ? AND ended_at_ms > ? AND (? = 0 OR run_id = ?)
+`+gapRangeFilterSQL+`
 ORDER BY started_at_ms, run_id, first_seq
 LIMIT ?`, from, to, to, from, runID, runID, maxMetadataGaps+1)
 	if err != nil {
