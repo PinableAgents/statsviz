@@ -34,5 +34,6 @@ export const onClickPlotInfo = (gd, ev) => {
     customClass: "plot-info-popover",
     content: gd.infoText,
   });
+  popover.setContent({ ".popover-body": gd.infoText });
   popover.show();
 };

@@ -27,7 +27,8 @@
             <div
               class="btn-group"
               role="group"
-              aria-label="Basic checkbox toggle button group"
+              data-i18n-aria-label="Plot categories"
+              aria-label="Plot categories"
             >
               <input
                 type="checkbox"
@@ -39,6 +40,7 @@
               <label
                 class="btn btn-sm btn-outline-secondary"
                 for="tag-cpu"
+                data-i18n-title="Alt+Click to show only this category"
                 title="Alt+Click to show only this category"
                 data-bs-toggle="tooltip"
                 data-bs-delay='{"show":100,"hide":100}'
@@ -55,6 +57,7 @@
               <label
                 class="btn btn-sm btn-outline-secondary"
                 for="tag-gc"
+                data-i18n-title="Alt+Click to show only this category"
                 title="Alt+Click to show only this category"
                 data-bs-toggle="tooltip"
                 data-bs-delay='{"show":100,"hide":100}'
@@ -72,9 +75,11 @@
               <label
                 class="btn btn-sm btn-outline-secondary"
                 for="tag-scheduler"
+                data-i18n-title="Alt+Click to show only this category"
                 title="Alt+Click to show only this category"
                 data-bs-toggle="tooltip"
                 data-bs-delay='{"show":100,"hide":100}'
+                data-i18n="Scheduler"
                 >Scheduler</label
               >
 
@@ -89,9 +94,11 @@
               <label
                 class="btn btn-sm btn-outline-secondary"
                 for="tag-misc"
+                data-i18n-title="Alt+Click to show only this category"
                 title="Alt+Click to show only this category"
                 data-bs-toggle="tooltip"
                 data-bs-delay='{"show":100,"hide":100}'
+                data-i18n="Misc"
                 >Misc</label
               >
             </div>
@@ -106,7 +113,9 @@
             type="text"
             id="plot-search"
             class="form-control form-control-sm"
+            data-i18n-placeholder="Type a metric or plot name..."
             placeholder="Type a metric or plot name..."
+            data-i18n-aria-label="Search by metric or plot name"
             aria-label="Search by metric or plot name"
             style="width: 400px; max-width: 100%"
           />
@@ -114,7 +123,7 @@
 
         <!-- Time range -->
         <div class="w-100 w-lg-auto d-flex justify-content-center align-items-center gap-2">
-          <div class="btn-group nav-radio" role="group" aria-label="Time range">
+          <div class="btn-group nav-radio" role="group" data-i18n-aria-label="Time range" aria-label="Time range">
             <input
               type="radio"
               class="btn-check"
@@ -128,6 +137,7 @@
               class="btn btn-sm btn-outline-secondary"
               for="range1"
               data-bs-toggle="tooltip"
+              data-i18n-title="Last 1 minute"
               title="Last 1 minute"
               >1m</label
             >
@@ -143,6 +153,7 @@
               class="btn btn-sm btn-outline-secondary"
               for="range5"
               data-bs-toggle="tooltip"
+              data-i18n-title="Last 5 minutes"
               title="Last 5 minutes"
               >5m</label
             >
@@ -158,11 +169,12 @@
               class="btn btn-sm btn-outline-secondary"
               for="range10"
               data-bs-toggle="tooltip"
+              data-i18n-title="Last 10 minutes"
               title="Last 10 minutes"
               >10m</label
             >
           </div>
-          <button id="history-toggle" class="btn btn-sm btn-outline-secondary text-nowrap" type="button" aria-controls="history-panel" aria-expanded="false" hidden>查看历史</button>
+          <button id="history-toggle" class="btn btn-sm btn-outline-secondary text-nowrap" type="button" aria-controls="history-panel" aria-expanded="false" hidden data-i18n="View history">View history</button>
         </div>
 
         <div
@@ -180,6 +192,8 @@
             class="btn btn-sm btn-outline-secondary"
             for="btn-gc-events"
             data-bs-toggle="tooltip"
+            data-i18n-title="Show/hide GC events"
+            data-i18n-aria-label="Show/hide GC events"
             title="Show/hide GC events"
             ><svg
               class="icon"
@@ -207,6 +221,8 @@
             class="btn btn-sm btn-outline-secondary"
             for="btn-play"
             data-bs-toggle="tooltip"
+            data-i18n-title="Pause/Resume Live Updates"
+            data-i18n-aria-label="Pause/Resume Live Updates"
             title="Pause/Resume Live Updates"
             ><svg
               class="icon"
@@ -225,12 +241,19 @@
       </div>
 
       <!-- Links and options -->
-      <div class="d-flex align-items-center gap-3">
+      <div class="navbar-options d-flex align-items-center gap-3">
+        <select id="language-select" class="language-select form-select form-select-sm" data-language-select data-i18n-aria-label="Language" aria-label="Language">
+          <option value="zh" lang="zh-CN">中文</option>
+          <option value="en" lang="en">English</option>
+        </select>
         <a
           href="https://pkg.go.dev/runtime/metrics"
           target="_blank"
           class="text-decoration-none"
-          title="runtime/metrics doc"
+          data-i18n-title="runtime/metrics documentation"
+          title="runtime/metrics documentation"
+          data-i18n-aria-label="runtime/metrics documentation"
+          aria-label="runtime/metrics documentation"
         >
           <svg
             class="icon"
@@ -245,9 +268,13 @@
           </svg>
         </a>
         <a
-          href="https://github.com/arl/statsviz"
+          href="https://github.com/PinableAgents/statsviz"
           target="_blank"
           class="text-decoration-none"
+          data-i18n-title="PinableAgents/statsviz on GitHub"
+          title="PinableAgents/statsviz on GitHub"
+          data-i18n-aria-label="PinableAgents/statsviz on GitHub"
+          aria-label="PinableAgents/statsviz on GitHub"
         >
           <svg
             class="icon"
@@ -274,6 +301,8 @@
             class="btn btn-sm btn-outline-secondary"
             for="btn-darkmode"
             data-bs-toggle="tooltip"
+            data-i18n-title="Light/Dark mode"
+            data-i18n-aria-label="Light/Dark mode"
             title="Light/Dark mode"
             ><svg
               class="icon"
@@ -292,10 +321,10 @@
       </div>
     </nav>
 
-    <section id="history-panel" class="history-panel" aria-label="历史时间控制" hidden>
+    <section id="history-panel" class="history-panel" data-i18n-aria-label="History time controls" aria-label="History time controls" hidden>
       <div class="history-row">
-        <span id="history-mode" class="badge text-bg-success">跟随实时</span>
-        <div class="btn-group nav-radio" role="group" aria-label="历史时间范围">
+        <span id="history-mode" class="badge text-bg-success" data-i18n="Following live">Following live</span>
+        <div class="btn-group nav-radio" role="group" data-i18n-aria-label="History time range" aria-label="History time range">
           <input type="radio" class="btn-check" name="range" id="range60" value="3600" autocomplete="off" disabled />
           <label class="btn btn-sm btn-outline-secondary" for="range60">1h</label>
           <input type="radio" class="btn-check" name="range" id="range360" value="21600" autocomplete="off" disabled />
@@ -305,30 +334,45 @@
           <input type="radio" class="btn-check" name="range" id="range10080" value="604800" autocomplete="off" disabled />
           <label class="btn btn-sm btn-outline-secondary" for="range10080">7d</label>
         </div>
-        <span id="history-status" class="history-status" role="status">正在检测历史功能…</span>
-        <button id="history-prev" class="btn btn-sm btn-outline-secondary" type="button" disabled>← 前移</button>
-        <button id="history-next" class="btn btn-sm btn-outline-secondary" type="button" disabled>后移 →</button>
+        <span id="history-status" class="history-status" role="status" data-i18n="Checking history availability…">Checking history availability…</span>
+        <button id="history-prev" class="btn btn-sm btn-outline-secondary" type="button" disabled data-i18n="← Earlier">← Earlier</button>
+        <button id="history-next" class="btn btn-sm btn-outline-secondary" type="button" disabled data-i18n="Later →">Later →</button>
       </div>
       <div class="history-row history-range-row">
-        <label for="history-from">起始</label>
+        <label for="history-from" data-i18n="From">From</label>
         <input id="history-from" class="form-control form-control-sm" type="datetime-local" step="1" disabled />
-        <label for="history-to">结束</label>
+        <label for="history-to" data-i18n="To">To</label>
         <input id="history-to" class="form-control form-control-sm" type="datetime-local" step="1" disabled />
-        <button id="history-apply" class="btn btn-sm btn-outline-primary" type="button" disabled>查询</button>
-        <input id="history-slider" class="form-range" type="range" min="0" max="0" value="0" aria-label="历史窗口位置" disabled />
+        <button id="history-apply" class="btn btn-sm btn-outline-primary" type="button" disabled data-i18n="Query">Query</button>
+        <input id="history-slider" class="form-range" type="range" min="0" max="0" value="0" data-i18n-aria-label="History window position" aria-label="History window position" disabled />
       </div>
       <div class="history-row point-row">
-        <label for="history-point-at">指定时间</label>
+        <label for="history-point-at" data-i18n="Time">Time</label>
         <input id="history-point-at" class="form-control form-control-sm" type="datetime-local" step="0.001" disabled />
-        <button id="history-point-query" class="btn btn-sm btn-outline-primary" type="button" disabled>查看真实采样</button>
-        <span class="history-hint">也可点击任意图表同步游标</span>
+        <button id="history-point-query" class="btn btn-sm btn-outline-primary" type="button" disabled data-i18n="View actual sample">View actual sample</button>
+        <span class="history-hint" data-i18n="Click any chart to synchronize the cursor">Click any chart to synchronize the cursor</span>
       </div>
       <div id="history-granularity" class="history-granularity"></div>
-      <details id="point-details" class="point-details">
-        <summary>采样详情</summary>
-        <div id="point-detail-content">尚未选择采样点</div>
-      </details>
     </section>
+
+    <div id="point-details" class="modal fade" tabindex="-1" aria-labelledby="point-details-title" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header gap-3">
+            <h5 id="point-details-title" class="modal-title me-auto" data-i18n="Sample details">Sample details</h5>
+            <select id="detail-language-select" class="language-select form-select form-select-sm" data-language-select data-i18n-aria-label="Language" aria-label="Language">
+              <option value="zh" lang="zh-CN">中文</option>
+              <option value="en" lang="en">English</option>
+            </select>
+            <button type="button" class="btn-close ms-0" data-bs-dismiss="modal" data-i18n-aria-label="Close" aria-label="Close"></button>
+          </div>
+          <div id="point-detail-content" class="modal-body" data-i18n="No sample selected">No sample selected</div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="Close">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="d-flex flex-grow-1">
       <!-- Main Content -->

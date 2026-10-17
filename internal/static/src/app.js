@@ -3,6 +3,9 @@ import PlotManager from "./PlotManager.js";
 import { gcEnabled, initNav, updateVisibility } from "./nav.js";
 import { buildWebsocketURI } from "./utils.js";
 import WebSocketClient from "./socket.js";
+import { Modal } from "bootstrap";
+import { errorMessage, getLocale, onLanguageChange, t } from "./i18n.js";
+import { localizePlotConfig } from "./plotTranslations.js";
 import HistoryClient, {
   HistoryUnavailableError,
   StaleRequestError,
@@ -47,6 +50,10 @@ let rangeQueryDebouncer = null;
 let renderedPoints = [];
 let frozenView = null;
 let liveDurationMs = 60 * 1000;
+let statusContent = () => t("Checking history availability…");
+let statusError = false;
+let pointResponse = null;
+let pointDetailsTrigger = null;
 
 const view = {
   mode: "follow",
@@ -92,19 +99,26 @@ const parseLocalInput = (value) => {
 };
 
 const setStatus = (message, error = false) => {
-  elements["history-status"].textContent = message;
+  statusContent = typeof message === "function" ? message : () => t(message);
+  statusError = error;
+  elements["history-status"].removeAttribute("data-i18n");
+  elements["history-status"].textContent = statusContent();
   elements["history-status"].classList.toggle("text-danger", error);
 };
 
 const setMode = (mode) => {
   view.mode = mode;
   const fixed = mode === "history";
-  elements["history-mode"].textContent = fixed ? "固定历史" : "跟随实时";
+  const modeLabel = fixed ? "Fixed history" : "Following live";
+  elements["history-mode"].dataset.i18n = modeLabel;
+  elements["history-mode"].textContent = t(modeLabel);
   elements["history-mode"].className = `badge ${fixed ? "text-bg-warning" : "text-bg-success"}`;
   elements["history-prev"].disabled = !historyAvailable || !fixed;
   elements["history-next"].disabled = !historyAvailable || !fixed;
   elements["history-panel"].hidden = !fixed;
-  elements["history-toggle"].textContent = fixed ? "返回实时" : "查看历史";
+  const toggleLabel = fixed ? "Back to live" : "View history";
+  elements["history-toggle"].dataset.i18n = toggleLabel;
+  elements["history-toggle"].textContent = t(toggleLabel);
   elements["history-toggle"].setAttribute("aria-expanded", String(fixed));
   elements["history-toggle"].classList.toggle("active", fixed);
 };
@@ -153,7 +167,7 @@ const returnToLive = () => {
   view.durationMs = liveDurationMs;
   setMode("follow");
   frozenView = null;
-  elements["point-details"].open = false;
+  Modal.getInstance(elements["point-details"])?.hide();
   plotMgr?.setCursor(null);
   if (view.paused) {
     const playButton = document.getElementById("btn-play");
@@ -252,9 +266,15 @@ const rangeStatus = (response) => {
   const step = Number(response.step_ms) || 0;
   const pointCount = response.points?.length || 0;
   const gaps = response.gaps?.length || 0;
-  elements["history-granularity"].textContent = step > 0
-    ? `服务端桶宽 ${step >= 60000 ? `${step / 60000} 分钟` : `${step / 1000} 秒`} · ${pointCount} 点 · ${gaps} 个缺口 · GC 线仅表示采样时可见的 lastgc（最近一次 GC），最多 120 条`
-    : `原始采样 · ${pointCount} 点 · ${gaps} 个缺口 · GC 线仅表示采样时可见的 lastgc（最近一次 GC），最多 120 条`;
+  const duration = step >= 60000
+    ? t("{count} minutes", { count: step / 60000 })
+    : t("{count} seconds", { count: step / 1000 });
+  elements["history-granularity"].textContent = [
+    step > 0 ? t("Server bucket width {duration}", { duration }) : t("Raw sample"),
+    t("{count} points", { count: pointCount }),
+    t("{count} gaps", { count: gaps }),
+    t("GC lines show only lastgc (the latest GC) visible at sampling time, up to 120 lines"),
+  ].join(" · ");
 };
 
 const queryRange = async ({ interactive = false } = {}) => {
@@ -263,7 +283,7 @@ const queryRange = async ({ interactive = false } = {}) => {
   const plots = visiblePlotNames(plotMgr);
   if (plotMgr && !plots.length) return;
   const requestedRange = { from: view.from, to: view.to };
-  setStatus("正在查询历史…");
+  setStatus("Loading history…");
   lastRangeAttemptAt = Date.now();
   const pending = historyClient.range({
     ...requestedRange,
@@ -280,11 +300,13 @@ const queryRange = async ({ interactive = false } = {}) => {
     rangeStatus(response);
     const status = historyMeta?.status || {};
     const dropped = Number(status.dropped) || 0;
-    setStatus(dropped ? `历史已加载，累计丢弃 ${dropped} 个样本` : "历史已加载");
+    setStatus(() => dropped
+      ? t("History loaded; {count} samples dropped in total", { count: dropped })
+      : t("History loaded"));
     if (interactive || !view.paused) render(true);
   } catch (error) {
     if (error instanceof StaleRequestError) return;
-    setStatus(error.message || "历史查询失败，保留上一幅图", true);
+    setStatus(() => errorMessage(error, "History query failed; keeping the previous chart"), true);
   } finally {
     if (rangeQueryInFlight === pending) rangeQueryInFlight = null;
   }
@@ -301,15 +323,14 @@ const updateMetaStatus = (meta) => {
   const storage = dbSize || walSize
     ? ` · DB ${(dbSize / 1048576).toFixed(1)} MiB / WAL ${(walSize / 1048576).toFixed(1)} MiB`
     : "";
-  const storageError = status.last_error ? ` · ${status.last_error}` : "";
-  const committed = Number(status.last_commit_ms)
-    ? ` · 最近提交 ${new Date(Number(status.last_commit_ms)).toLocaleTimeString()}`
-    : "";
-  const dropped = Number(status.dropped) ? ` · 丢弃 ${status.dropped}` : "";
-  setStatus(
-    `历史可用，队列 ${status.queue_depth || 0}${committed}${dropped}${storage}${storageError}`,
-    Boolean(status.last_error),
-  );
+  setStatus(() => {
+    const storageError = status.last_error ? ` · ${errorMessage({ message: status.last_error })}` : "";
+    const committed = Number(status.last_commit_ms)
+      ? ` · ${t("Last commit {time}", { time: new Date(Number(status.last_commit_ms)).toLocaleTimeString(getLocale()) })}`
+      : "";
+    const dropped = Number(status.dropped) ? ` · ${t("Dropped {count}", { count: status.dropped })}` : "";
+    return `${t("History available; queue {count}", { count: status.queue_depth || 0 })}${committed}${dropped}${storage}${storageError}`;
+  }, Boolean(status.last_error));
 };
 
 const initializeHistory = async () => {
@@ -318,13 +339,13 @@ const initializeHistory = async () => {
     historyAvailable = false;
     if (view.mode === "history") returnToLive();
     setHistoryControlsEnabled(false);
-    setStatus("服务未启用持久历史，实时监控仍可使用");
+    setStatus("Persistent history is disabled; live monitoring is available");
     return;
   }
   const wasAvailable = historyAvailable;
   try {
     const meta = await historyClient.meta();
-    if (!meta.enabled) throw new HistoryUnavailableError("服务未启用持久历史");
+    if (!meta.enabled) throw new HistoryUnavailableError("Persistent history is disabled");
     historyMeta = meta;
     lastMetaRefreshAt = Date.now();
     historyAvailable = true;
@@ -336,13 +357,13 @@ const initializeHistory = async () => {
   } catch (error) {
     if (error instanceof StaleRequestError) return;
     if (wasAvailable && !(error instanceof HistoryUnavailableError)) {
-      setStatus(error.message || "历史状态暂时不可读，保留上一幅图", true);
+      setStatus(() => errorMessage(error, "History status unavailable; keeping the previous chart"), true);
       return;
     }
     historyAvailable = false;
     if (view.mode === "history") returnToLive();
     setHistoryControlsEnabled(false);
-    setStatus("历史接口不可用，已保留实时监控", true);
+    setStatus("History unavailable; live monitoring is available", true);
   }
 };
 
@@ -357,7 +378,7 @@ const refreshHistoryStatus = async () => {
     updateMetaStatus(meta);
   } catch (error) {
     if (!(error instanceof StaleRequestError)) {
-      setStatus(error.message || "历史状态暂时不可读", true);
+      setStatus(() => errorMessage(error, "History status temporarily unavailable"), true);
     }
   }
 };
@@ -392,12 +413,22 @@ const appendDetailRow = (table, label, value) => {
   row.insertCell().textContent = value;
 };
 
-const showPointDetails = (response) => {
+const openPointDetails = () => {
+  const modal = elements["point-details"];
+  if (!modal.classList.contains("show") && !modal.contains(document.activeElement)) {
+    pointDetailsTrigger = document.activeElement;
+  }
+  Modal.getOrCreateInstance(modal).show();
+};
+
+const showPointDetails = (response, select = true) => {
+  pointResponse = response;
   const container = elements["point-detail-content"];
+  container.removeAttribute("data-i18n");
   container.replaceChildren();
   if (!response.found || !response.sample) {
-    container.textContent = "容差范围内没有真实采样点";
-    elements["point-details"].open = true;
+    container.textContent = t("No actual sample within the tolerance window");
+    if (select) openPointDetails();
     return;
   }
 
@@ -407,12 +438,12 @@ const showPointDetails = (response) => {
   const actualDate = new Date(sample.timestamp);
   appendDetailRow(
     table,
-    "实际时间",
-    `${actualDate.toLocaleString(undefined, { timeZoneName: "short" })} (${actualDate.toISOString()})`,
+    t("Actual time"),
+    `${actualDate.toLocaleString(getLocale(), { timeZoneName: "short" })} (${actualDate.toISOString()})`,
   );
-  appendDetailRow(table, "请求偏差", `${Number(response.offset_ms) || 0} ms`);
-  appendDetailRow(table, "运行 / 序号", `${sample.run_id ?? "旧服务"} / ${sample.seq ?? "无"}`);
-  const configPlots = new Map((response.run?.config?.series || []).map((plot) => [plot.name, plot]));
+  appendDetailRow(table, t("Request offset"), `${Number(response.offset_ms) || 0} ms`);
+  appendDetailRow(table, t("Run / sequence"), `${sample.run_id ?? t("Legacy server")} / ${sample.seq ?? t("None")}`);
+  const configPlots = new Map((response.run?.config?.series || []).map((plot) => [plot.name, localizePlotConfig(plot)]));
   for (const [name, values] of Object.entries(sample.series || {})) {
     const config = configPlots.get(name);
     const list = Array.isArray(values) ? values : [values];
@@ -422,20 +453,22 @@ const showPointDetails = (response) => {
       appendDetailRow(
         table,
         subName ? `${name} / ${subName}` : `${name}[${index}]`,
-        value === null ? "缺失" : `${value}${unit ? ` ${unit}` : ""}`,
+        value === null ? t("Missing") : `${value}${unit ? ` ${unit}` : ""}`,
       );
     });
   }
   container.appendChild(table);
-  elements["point-details"].open = true;
-  elements["history-point-at"].value = formatLocalInput(sample.timestamp);
-  plotMgr?.setCursor(sample.timestamp);
-  render(true);
+  if (select) {
+    openPointDetails();
+    elements["history-point-at"].value = formatLocalInput(sample.timestamp);
+    plotMgr?.setCursor(sample.timestamp);
+    render(true);
+  }
 };
 
 async function requestPoint(timestamp, schemaKey = null) {
   if (!historyAvailable) {
-    setStatus("真实单点查询需要启用持久历史", true);
+    setStatus("Actual sample lookup requires persistent history", true);
     return;
   }
   openHistory();
@@ -445,21 +478,25 @@ async function requestPoint(timestamp, schemaKey = null) {
     timestamp,
     schemaKey,
   );
-  setStatus("正在查询真实采样点…");
+  setStatus("Loading actual sample…");
   try {
     const response = await historyClient.point({
       at: timestamp,
       runId,
     });
     showPointDetails(response);
-    setStatus(response.found ? "已选中真实采样点" : "附近没有真实采样点");
+    setStatus(() => t(response.found ? "Actual sample selected" : "No actual sample nearby"));
   } catch (error) {
     if (error instanceof StaleRequestError) return;
-    setStatus(error.message || "单点查询失败", true);
+    setStatus(() => errorMessage(error, "Sample lookup failed"), true);
   }
 }
 
 const bindHistoryControls = () => {
+  elements["point-details"].addEventListener("hidden.bs.modal", () => {
+    if (pointDetailsTrigger?.isConnected) pointDetailsTrigger.focus({ preventScroll: true });
+    pointDetailsTrigger = null;
+  });
   elements["history-apply"].addEventListener("click", () => {
     const from = parseLocalInput(elements["history-from"].value);
     const to = parseLocalInput(elements["history-to"].value);
@@ -491,6 +528,15 @@ const initializeUI = () => {
   initialized = true;
   collectElements();
   bindHistoryControls();
+  onLanguageChange(() => {
+    setMode(view.mode);
+    elements["history-status"].textContent = statusContent();
+    elements["history-status"].classList.toggle("text-danger", statusError);
+    if (currentRangeResponse) rangeStatus(currentRangeResponse);
+    if (pointResponse) showPointDetails(pointResponse, false);
+    for (const plot of plotMgr?.plots || []) plot.updateLanguage();
+    render(true);
+  });
   initNav({
     getPlotManager: () => plotMgr,
     onRedraw: (force) => render(force),
@@ -507,7 +553,7 @@ const initializeUI = () => {
       } else {
         frozenView = null;
       }
-      setStatus(paused ? "画面已暂停；历史交互仍可使用" : historyAvailable ? "画面已恢复" : "实时画面已恢复");
+      setStatus(() => t(paused ? "View paused; history controls remain available" : historyAvailable ? "View resumed" : "Live view resumed"));
       if (!paused) render(true);
     },
     onPreset: (seconds) => {

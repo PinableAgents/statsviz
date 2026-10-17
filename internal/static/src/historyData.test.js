@@ -283,10 +283,11 @@ test("累计直方图尾部没有基线时保留已提交值并明确标记不�
   assert.equal(point.coverage_ns.latency[0], 1000);
   assert.match(
     envelopeSummary(
-      { aggregate: true, summary: "聚合桶摘要" },
+      { aggregate: true },
       2,
       7,
       point.incomplete.latency[0],
+      "zh",
     ),
     /缺少累计基线，仅显示已提交部分/,
   );
@@ -404,7 +405,7 @@ test("长范围坐标显示日期，聚合摘要包含最小值和最大值", ()
   assert.equal(timeTickFormat([from, from + 7 * 86400000]), "%Y-%m-%d\n%H:%M");
   assert.equal(timeTickFormat([from, from + 60000]), "%H:%M:%S");
   assert.equal(
-    envelopeSummary({ aggregate: true, summary: "聚合桶摘要" }, 1, 4),
+    envelopeSummary({ aggregate: true }, 1, 4, false, "zh"),
     "聚合桶摘要<br><b>最小值</b>: 1<br><b>最大值</b>: 4",
   );
 });

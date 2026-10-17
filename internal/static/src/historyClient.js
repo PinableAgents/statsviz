@@ -1,5 +1,15 @@
-export class HistoryUnavailableError extends Error {}
-export class StaleRequestError extends Error {}
+import { t } from "./i18n.js";
+
+class LocalizedError extends Error {
+  constructor(message, values = {}) {
+    super(t(message, values));
+    this.translationKey = message;
+    this.translationValues = values;
+  }
+}
+
+export class HistoryUnavailableError extends LocalizedError {}
+export class StaleRequestError extends LocalizedError {}
 
 const defaultFetch = (...args) => globalThis.fetch(...args);
 
@@ -20,11 +30,11 @@ export const buildHTTPBase = (websocketURL, pageURL) => {
 const readJSON = async (response) => {
   const contentType = response.headers?.get?.("content-type") || "";
   if (response.status === 404 || !contentType.includes("application/json")) {
-    throw new HistoryUnavailableError("历史接口不可用");
+    throw new HistoryUnavailableError("History endpoint unavailable");
   }
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
-    throw new Error(payload.error || `历史请求失败 (${response.status})`);
+    throw new LocalizedError(payload.error || "History request failed ({status})", { status: response.status });
   }
   return response.json();
 };
@@ -50,16 +60,16 @@ export class LatestRequest {
         headers: { Accept: "application/json" },
       });
       if (controller.signal.aborted || generation !== this.#generation) {
-        throw new StaleRequestError("请求已取消");
+        throw new StaleRequestError("Request canceled");
       }
       const payload = await readJSON(response);
       if (controller.signal.aborted || generation !== this.#generation) {
-        throw new StaleRequestError("请求已过期");
+        throw new StaleRequestError("Request expired");
       }
       return payload;
     } catch (error) {
       if (controller.signal.aborted || generation !== this.#generation) {
-        throw new StaleRequestError("请求已取消");
+        throw new StaleRequestError("Request canceled");
       }
       throw error;
     } finally {

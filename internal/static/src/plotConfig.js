@@ -1,12 +1,28 @@
 import * as ui from "./ui.js";
 import Plotly from "plotly.js-cartesian-dist";
 import { formatFunction } from "./utils.js";
+import { getLocale, t } from "./i18n.js";
+import { zh } from "./translations.js";
+
+Plotly.register({
+  moduleType: "locale",
+  name: "zh-CN",
+  dictionary: zh,
+  format: {
+    days: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"],
+    shortDays: ["日", "一", "二", "三", "四", "五", "六"],
+    months: Array.from({ length: 12 }, (_, index) => `${index + 1}月`),
+    shortMonths: Array.from({ length: 12 }, (_, index) => `${index + 1}月`),
+    date: "%Y-%m-%d",
+  },
+});
 
 export const defaultPlotHeight = 480;
 
 export const newConfigObject = (cfg, isMaximized) => {
   return {
     responsive: isMaximized,
+    locale: getLocale(),
     displaylogo: false,
     displayModeBar: true,
     modeBarButtonsToRemove: [
@@ -19,12 +35,13 @@ export const newConfigObject = (cfg, isMaximized) => {
     modeBarButtonsToAdd: [
       {
         name: "info",
-        title: "Plot info",
+        title: t("Plot info"),
         icon: Plotly.Icons.question,
         click: ui.onClickPlotInfo,
       },
       {
         name: isMaximized ? "minimize" : "maximize",
+        title: t(isMaximized ? "Minimize" : "Maximize"),
         icon: isMaximized ? Plotly.Icons.zoom_minus : Plotly.Icons.zoom_plus,
         click: ui.onClickPlotMaximize(cfg),
       },

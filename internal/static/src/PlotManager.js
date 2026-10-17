@@ -1,4 +1,5 @@
 import { Plot, createVerticalLines } from "./plot.js";
+import { getLocale } from "./i18n.js";
 
 const debounce = (fn, delay) => {
   let timer = null;
@@ -33,8 +34,8 @@ export default class PlotManager {
     this.#rangeHandler = debounce((range) => handlers.onRange?.(range), 220);
     this.plots = schemaEntries.flatMap((entry, entryIndex) =>
       (entry.config.series || []).map((plot, plotIndex) => {
-        const suffix = multipleSchemas
-          ? ` · ${entry.startedAt ? new Date(entry.startedAt).toLocaleString() : entry.key.slice(0, 8)}`
+        const suffix = () => multipleSchemas
+          ? ` · ${entry.startedAt ? new Date(entry.startedAt).toLocaleString(getLocale()) : entry.key.slice(0, 8)}`
           : "";
         return new Plot(
           structuredClone(plot),

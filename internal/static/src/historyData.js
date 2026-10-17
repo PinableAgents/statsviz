@@ -1,3 +1,5 @@
+import { getLanguage, t } from "./i18n.js";
+
 const finiteNumber = (value) => {
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
@@ -536,8 +538,8 @@ export const buildChartData = (points, entries, gaps = []) => {
         aggregate: Boolean(point.aggregate || (point.source === "history" && (point.min || point.max))),
         incomplete: point.incomplete || null,
         summary: point.aggregate || (point.source === "history" && (point.min || point.max))
-          ? "聚合桶摘要"
-          : "原始采样",
+          ? "Aggregate bucket summary"
+          : "Raw sample",
       });
       for (const plot of entry.config.series || []) {
         const values = point.series?.[plot.name] || [];
@@ -604,15 +606,17 @@ export const runIdForPointRequest = (points, runs, timestamp, schemaKey) => {
   return nearest?.run_id;
 };
 
-export const envelopeSummary = (metadata, minimum, maximum, incomplete = false) => {
-  if (!metadata) return "缺口";
-  if (!metadata.aggregate) return metadata.summary;
-  const min = minimum === null || minimum === undefined ? "缺失" : minimum;
-  const max = maximum === null || maximum === undefined ? "缺失" : maximum;
+export const envelopeSummary = (metadata, minimum, maximum, incomplete = false, language = getLanguage()) => {
+  const translate = (message) => t(message, {}, language);
+  if (!metadata) return translate("Gap");
+  const summary = translate(metadata.aggregate ? "Aggregate bucket summary" : "Raw sample");
+  if (!metadata.aggregate) return summary;
+  const min = minimum === null || minimum === undefined ? translate("Missing") : minimum;
+  const max = maximum === null || maximum === undefined ? translate("Missing") : maximum;
   const suffix = incomplete
-    ? "<br><b>实时尾部</b>: 缺少累计基线，仅显示已提交部分"
+    ? `<br><b>${translate("Live tail")}</b>: ${translate("Missing cumulative baseline; showing only committed data")}`
     : "";
-  return `${metadata.summary}<br><b>最小值</b>: ${min}<br><b>最大值</b>: ${max}${suffix}`;
+  return `${summary}<br><b>${translate("Minimum")}</b>: ${min}<br><b>${translate("Maximum")}</b>: ${max}${suffix}`;
 };
 
 export const timeTickFormat = ([from, to]) => {

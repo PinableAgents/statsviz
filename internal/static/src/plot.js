@@ -8,6 +8,7 @@ import {
 import { formatFunction } from "./utils.js";
 import { envelopeSummary, timeTickFormat } from "./historyData.js";
 import Plotly from "plotly.js-cartesian-dist";
+import { localizePlotConfig } from "./plotTranslations.js";
 
 // Bucket edges are stored in cfg.custom_data.
 const heatmapBucketLabel = (bucket, edges, formatYUnit) => {
@@ -30,6 +31,7 @@ class Plot {
   #updateCount;
   #maximized;
   #cfg;
+  #sourceCfg;
   #dataTemplate;
   #cachedWidth;
   #inViewport = false;
@@ -44,6 +46,8 @@ class Plot {
   #lastRange;
 
   constructor(cfg, schemaKey, instanceName, titleSuffix = "", handlers = {}) {
+    this.#sourceCfg = cfg;
+    cfg = localizePlotConfig(cfg);
     cfg.layout.paper_bgcolor = themeColors[theme.getThemeMode()].paper_bgcolor;
     cfg.layout.plot_bgcolor = themeColors[theme.getThemeMode()].plot_bgcolor;
     cfg.layout.font_color = themeColors[theme.getThemeMode()].font_color;
@@ -52,7 +56,7 @@ class Plot {
     this.#cfg = cfg;
     this.#schemaKey = schemaKey;
     this.#instanceName = instanceName;
-    this.#titleSuffix = titleSuffix;
+    this.#titleSuffix = typeof titleSuffix === "function" ? titleSuffix : () => titleSuffix;
     this.#handlers = handlers;
     this.#updateCount = 0;
     this.#dataTemplate = [];
@@ -92,7 +96,7 @@ class Plot {
     }
 
     this.#plotlyLayout = newLayoutObject(cfg, this.#maximized);
-    this.#plotlyLayout.title.text += this.#titleSuffix;
+    this.#plotlyLayout.title.text += this.#titleSuffix();
     this.#plotlyConfig = newConfigObject(cfg, this.#maximized);
   }
 
@@ -118,9 +122,15 @@ class Plot {
 
   matches(query) {
     if (!query) return true;
-    if (!this.#cfg.metrics) return false;
     const q = query.toLowerCase();
-    return this.#cfg.metrics.some((m) => m.toLowerCase().includes(q));
+    const chinese = localizePlotConfig(this.#sourceCfg, "zh");
+    const labels = [
+      this.#cfg.name, chinese.title, this.#sourceCfg.title,
+      ...(this.#cfg.metrics || []),
+      ...(chinese.subplots || []).map((subplot) => subplot.name),
+      ...(this.#sourceCfg.subplots || []).map((subplot) => subplot.name),
+    ];
+    return labels.some((label) => label?.toLowerCase().includes(q));
   }
 
   setVisible(visible) {
@@ -319,7 +329,7 @@ class Plot {
     const plotsDiv = document.getElementById("plots", this.#maximized);
 
     this.#plotlyLayout = newLayoutObject(this.#cfg, this.#maximized);
-    this.#plotlyLayout.title.text += this.#titleSuffix;
+    this.#plotlyLayout.title.text += this.#titleSuffix();
     this.#plotlyConfig = newConfigObject(this.#cfg, this.#maximized);
 
     this.#cachedWidth = plotsDiv.clientWidth;
@@ -333,7 +343,7 @@ class Plot {
     this.#maximized = false;
 
     this.#plotlyLayout = newLayoutObject(this.#cfg, this.#maximized);
-    this.#plotlyLayout.title.text += this.#titleSuffix;
+    this.#plotlyLayout.title.text += this.#titleSuffix();
     this.#plotlyConfig = newConfigObject(this.#cfg, this.#maximized);
 
     this.#cachedWidth = this.#htmlElt.clientWidth;
@@ -384,6 +394,26 @@ class Plot {
       plot_bgcolor: plot_bgcolor,
       "font.color": font_color,
     });
+  }
+
+  updateLanguage() {
+    const translated = localizePlotConfig(this.#sourceCfg);
+    translated.layout = { ...this.#cfg.layout, yaxis: translated.layout.yaxis };
+    this.#cfg = translated;
+    this.#plotlyLayout.title.text = translated.title + this.#titleSuffix();
+    this.#plotlyLayout.yaxis.title.text = translated.layout.yaxis.title;
+    this.#plotlyConfig = newConfigObject(translated, this.#maximized);
+    if (translated.type === "heatmap") {
+      this.#dataTemplate[0].hovertemplate =
+        `<b>${translated.hover.yname}</b>: %{text}<br>` +
+        `<b>${translated.hover.zname}</b>: %{z}<br>%{customdata}<extra></extra>`;
+    } else {
+      translated.subplots.forEach((subplot, index) => {
+        this.#dataTemplate[index].name = subplot.name;
+      });
+    }
+    this.#htmlElt.infoText = (translated.infoText || "")
+      .split("\n").map((line) => `<p>${line}</p>`).join("");
   }
 
   dispose() {

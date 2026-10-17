@@ -24,8 +24,8 @@
   <a href="https://github.com/PinableAgents/statsviz/actions">
     <img src="https://github.com/PinableAgents/statsviz/workflows/Tests-others/badge.svg" alt="Others CI">
   </a>
-  <a href="https://codecov.io/gh/arl/statsviz">
-    <img src="https://codecov.io/gh/arl/statsviz/branch/main/graph/badge.svg" alt="Codecov">
+  <a href="https://codecov.io/gh/PinableAgents/statsviz">
+    <img src="https://codecov.io/gh/PinableAgents/statsviz/branch/main/graph/badge.svg" alt="Codecov">
   </a>
 </p>
 
@@ -35,6 +35,8 @@
 
 
 Visualize real time plots of your Go program [runtime/metrics](https://pkg.go.dev/runtime/metrics) including heap, objects, goroutines, GC pauses, scheduler and more.
+
+This fork is maintained by [PinableAgents](https://github.com/PinableAgents/statsviz) and is based on [arl/statsviz](https://github.com/arl/statsviz). The logo and documentation screenshots below are hosted by the upstream project.
 
 <div align="center">
 <img alt="statsviz ui" width="300px" height="auto" src="https://github.com/arl/statsviz/raw/readme-docs/window-light.png">
@@ -219,6 +221,15 @@ Statsviz is made of two parts:
 Check out the API reference on [pkg.go.dev](https://pkg.go.dev/github.com/PinableAgents/statsviz#section-documentation).
 
 ### Web User Interface
+
+Use the language selector in the top toolbar to switch between English and
+Simplified Chinese. The initial language follows your browser preferences;
+your selection is saved locally. Controls, chart tooltips, plot descriptions,
+and history details follow the selected language. Go API names and metric paths
+retain their original spelling.
+
+Click a chart or query an actual sample to view its details in a scrollable
+dialog. Close it with the close button, Escape, or a click outside the dialog.
 
 
 #### Top Bar
