@@ -731,10 +731,27 @@ OR EXISTS (SELECT 1 FROM gaps g
 		args = []any{from, to, to, from, to, from}
 	}
 	args = append(args, maxMetadataRuns+1)
+	sourceSQL := `
+FROM runs r WHERE ` + condition
+	// octet_length 只读取字段的字节长度，避免先传输和排序大块 JSON。
+	var runCount, largestRunBytes, totalBytes int64
+	if err := queryer.QueryRowContext(ctx, `
+SELECT count(*), coalesce(max(config_bytes + aggregation_bytes), 0),
+       coalesce(sum(config_bytes + aggregation_bytes + hash_bytes), 0)
+FROM (
+    SELECT octet_length(r.config_json) AS config_bytes,
+           octet_length(r.aggregation_json) AS aggregation_bytes,
+           octet_length(r.config_hash) AS hash_bytes
+`+sourceSQL+` LIMIT ?)`, args...).Scan(&runCount, &largestRunBytes, &totalBytes); err != nil {
+		return nil, fmt.Errorf("预检历史运行配置: %w", err)
+	}
+	if runCount > maxMetadataRuns || largestRunBytes > maxRunMetadataBytes || totalBytes+runCount*metadataRowOverhead > maxMetadataBytes {
+		return nil, history.ErrTooLarge
+	}
 	rows, err := queryer.QueryContext(ctx, `
 SELECT r.id, r.started_at_ms, r.ended_at_ms, r.sample_interval_ns,
        r.config_hash, r.config_json, r.aggregation_json
-FROM runs r WHERE `+condition+` ORDER BY r.started_at_ms, r.id LIMIT ?`, args...)
+`+sourceSQL+` ORDER BY r.started_at_ms, r.id LIMIT ?`, args...)
 	if err != nil {
 		return nil, fmt.Errorf("读取历史运行配置: %w", err)
 	}
@@ -819,11 +836,13 @@ WHERE started_at_ms < ? AND ended_at_ms > ? AND (? = 0 OR run_id = ?)`
 func readGaps(ctx context.Context, queryer readQuerier, from, to, runID int64) ([]history.Gap, error) {
 	// 数量预检最多计数上限加一条，避免超限请求先逐行解码而耗尽查询时限。
 	var count int
+	var reasonBytes int64
 	if err := queryer.QueryRowContext(ctx, `
-SELECT count(*) FROM (SELECT 1 `+gapRangeFilterSQL+` LIMIT ?)`, to, from, runID, runID, maxMetadataGaps+1).Scan(&count); err != nil {
+SELECT count(*), coalesce(sum(reason_bytes), 0)
+FROM (SELECT octet_length(reason) AS reason_bytes `+gapRangeFilterSQL+` LIMIT ?)`, to, from, runID, runID, maxMetadataGaps+1).Scan(&count, &reasonBytes); err != nil {
 		return nil, fmt.Errorf("检查历史缺口数量: %w", err)
 	}
-	if count > maxMetadataGaps {
+	if count > maxMetadataGaps || reasonBytes+int64(count)*metadataRowOverhead > maxMetadataBytes {
 		return nil, history.ErrTooLarge
 	}
 	rows, err := queryer.QueryContext(ctx, `

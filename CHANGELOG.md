@@ -1,9 +1,9 @@
 v0.1.4 / 2026-10-17
 ==============
-  * Reject oversized gap metadata with a bounded count before materializing
-    records, preserving the existing query timeout and row limits.
-  * Add regression coverage for early rejection and run/time filtering, and
-    include failed Linux CI test output in summaries and annotations.
+  * Reject oversized run and gap metadata with bounded SQL row and byte
+    preflights before materializing records, preserving existing query limits.
+  * Add regression coverage for early rejection, UTF-8 byte budgets and run/time
+    filtering, and include failed Linux CI output in summaries and annotations.
 
 v0.1.3 / 2026-10-17
 ==============

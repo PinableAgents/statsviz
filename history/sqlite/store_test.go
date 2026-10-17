@@ -441,6 +441,13 @@ VALUES(?, ?, 'manual', '{}', '{}')`)
 		if err = tx.Commit(); err != nil {
 			t.Fatal(err)
 		}
+		queryer := &metadataRowTrackingQuerier{readQuerier: store.readDB}
+		if _, err = readRuns(context.Background(), queryer, 0, 0, 0, true); !errors.Is(err, history.ErrTooLarge) {
+			t.Fatalf("run row budget preflight error = %v", err)
+		}
+		if queryer.rowQueries != 0 {
+			t.Fatalf("oversized run metadata was materialized with %d row queries", queryer.rowQueries)
+		}
 		if _, err = store.Meta(context.Background()); !errors.Is(err, history.ErrTooLarge) {
 			t.Fatalf("run row budget error = %v", err)
 		}
@@ -450,7 +457,9 @@ VALUES(?, ?, 'manual', '{}', '{}')`)
 		store, _ := openTestStore(t, Options{FlushInterval: time.Hour})
 		defer store.Close()
 		padding := maxRunMetadataBytes - len(`{"padding":""}`) - len(`{}`)
-		config := `{"padding":"` + strings.Repeat("a", padding) + `"}`
+		// 多字节内容验证预算按 UTF-8 字节数计算。
+		content := strings.Repeat("测", padding/len("测")) + strings.Repeat("a", padding%len("测"))
+		config := `{"padding":"` + content + `"}`
 		for index := 0; index < maxMetadataBytes/maxRunMetadataBytes+1; index++ {
 			if _, err := store.writeDB.Exec(`
 INSERT INTO runs(started_at_ms, sample_interval_ns, config_hash, config_json, aggregation_json)
@@ -458,18 +467,25 @@ VALUES(?, ?, 'manual', ?, '{}')`, time.Now().UnixMilli()+int64(index), int64(tim
 				t.Fatal(err)
 			}
 		}
+		queryer := &metadataRowTrackingQuerier{readQuerier: store.readDB}
+		if _, err := readRuns(context.Background(), queryer, 0, 0, 0, true); !errors.Is(err, history.ErrTooLarge) {
+			t.Fatalf("run byte budget preflight error = %v", err)
+		}
+		if queryer.rowQueries != 0 {
+			t.Fatalf("oversized run metadata was materialized with %d row queries", queryer.rowQueries)
+		}
 		if _, err := store.Meta(context.Background()); !errors.Is(err, history.ErrTooLarge) {
 			t.Fatalf("run byte budget error = %v", err)
 		}
 	})
 }
 
-type gapRowTrackingQuerier struct {
+type metadataRowTrackingQuerier struct {
 	readQuerier
 	rowQueries int
 }
 
-func (q *gapRowTrackingQuerier) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
+func (q *metadataRowTrackingQuerier) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	q.rowQueries++
 	return q.readQuerier.QueryContext(ctx, query, args...)
 }
@@ -502,7 +518,7 @@ VALUES(?, ?, ?, ?, ?, 'test')`)
 	}
 	for _, runID := range []int64{0, run.ID} {
 		t.Run(fmt.Sprintf("preflight/run-%d", runID), func(t *testing.T) {
-			queryer := &gapRowTrackingQuerier{readQuerier: store.readDB}
+			queryer := &metadataRowTrackingQuerier{readQuerier: store.readDB}
 			if _, err := readGaps(context.Background(), queryer, base, base+10, runID); !errors.Is(err, history.ErrTooLarge) {
 				t.Fatalf("gap row budget error = %v", err)
 			}
@@ -528,6 +544,30 @@ VALUES(?, ?, ?, ?, ?, 'test')`)
 	}
 	if _, err = store.Range(context.Background(), history.RangeRequest{From: base, To: base + 10, RunID: run.ID}); !errors.Is(err, history.ErrTooLarge) {
 		t.Fatalf("gap row budget error = %v", err)
+	}
+}
+
+func TestRangeRejectsGapByteBudget(t *testing.T) {
+	store, _ := openTestStore(t, Options{FlushInterval: time.Hour})
+	defer store.Close()
+	base := time.Now().UnixMilli()
+	run := startTestRun(t, store, base, int64(time.Second), nil, `{}`)
+	size := maxMetadataBytes - metadataRowOverhead + 1
+	reason := strings.Repeat("缺", size/len("缺")) + strings.Repeat("a", size%len("缺"))
+	if _, err := store.writeDB.Exec(`
+INSERT INTO gaps(run_id, first_seq, last_seq, started_at_ms, ended_at_ms, reason)
+VALUES(?, 1, 1, ?, ?, ?)`, run.ID, base, base+10, reason); err != nil {
+		t.Fatal(err)
+	}
+	queryer := &metadataRowTrackingQuerier{readQuerier: store.readDB}
+	if _, err := readGaps(context.Background(), queryer, base, base+10, run.ID); !errors.Is(err, history.ErrTooLarge) {
+		t.Fatalf("gap byte budget preflight error = %v", err)
+	}
+	if queryer.rowQueries != 0 {
+		t.Fatalf("oversized gap metadata was materialized with %d row queries", queryer.rowQueries)
+	}
+	if _, err := store.Range(context.Background(), history.RangeRequest{From: base, To: base + 10, RunID: run.ID}); !errors.Is(err, history.ErrTooLarge) {
+		t.Fatalf("gap byte budget error = %v", err)
 	}
 }
 
