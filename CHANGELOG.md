@@ -1,3 +1,17 @@
+v0.1.3 / 2026-10-17
+==============
+  * Add English and Simplified Chinese UI languages with browser preference
+    detection, a language selector and locally saved preferences.
+  * Translate controls, chart titles, legends, descriptions, tooltips and history
+    details while preserving metric paths and Go API names.
+  * Show actual sample details in a scrollable dialog with keyboard dismissal
+    and language switching.
+  * Update fork links and rebuild the embedded frontend assets.
+
+v0.1.2 / 2026-10-16
+==============
+  * Fix Windows SQLite history database path parsing.
+
 v0.1.1 / 2026-10-16
 ==============
   * Keep the top bar compact during live monitoring; open historical presets,
