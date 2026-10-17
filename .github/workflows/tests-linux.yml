@@ -14,4 +14,15 @@ jobs:
       - name: go mod tidy check
         run: go mod tidy -diff
       - name: Tests
-        run: go test -race -shuffle=on ./...
+        run: |
+          set -o pipefail
+          if ! go test -race -shuffle=on ./... 2>&1 | tee "$RUNNER_TEMP/statsviz-tests.log"; then
+            {
+              echo '### Failed Go tests'
+              echo '```text'
+              go version
+              tail -c 900000 "$RUNNER_TEMP/statsviz-tests.log"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
