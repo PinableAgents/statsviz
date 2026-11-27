@@ -1,2 +1,11 @@
+# Pinable shared local files
+.codegraph/
+.DS_Store
+Thumbs.db
+[Dd]esktop.ini
+.env
+.env.local
+.env.*.local
+
 *.test
 out
